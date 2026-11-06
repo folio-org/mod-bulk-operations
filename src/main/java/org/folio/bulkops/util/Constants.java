@@ -73,6 +73,8 @@ public class Constants {
   public static final char NON_PRINTING_DELIMITER = '\u001f';
   public static final String SPECIAL_ARRAY_DELIMITER = NON_PRINTING_DELIMITER + ARRAY_DELIMITER;
   public static final String SPECIAL_ITEM_DELIMITER = NON_PRINTING_DELIMITER + ITEM_DELIMITER;
+  // kept below the IllegalTokenText suppression for line 73
+  public static final int INSTANCE_ALTERNATIVE_TITLES_POSITION = 29;
   public static final String ELECTRONIC_ACCESS_HEADINGS =
       "URL relationship;URI;Link text;Material specified;URL public note\n";
   public static final String SUBJECT_HEADINGS = "Subject headings;Subject source;Subject type\n";

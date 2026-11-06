@@ -5,6 +5,7 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ALTERNATIVE_TITLES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
@@ -65,8 +66,8 @@ public class MarcToUnifiedTableRowMapper {
   /**
    * Maps MARC record to the unified table row.
    *
-   * @param withAuthorityIds add authority UUID ($9) as one more part of Contributors, Subject and
-   *     Series statements entries (batch authority control)
+   * @param withAuthorityIds add authority UUID ($9) as one more part of Contributors, Subject,
+   *     Series statements and Alternative titles entries (batch authority control)
    */
   public List<String> processRecord(
       Record rec, List<String> headers, boolean forCsv, boolean withAuthorityIds) {
@@ -125,6 +126,8 @@ public class MarcToUnifiedTableRowMapper {
                 processClassification(rowData, dataField, headers, forCsv);
             case "100", "110", "111", "700", "710", "711", "720" ->
                 processContributors(rowData, dataField, headers, forCsv, withAuthorityIds);
+            case "130", "240", "246", "247" ->
+                processAlternativeTitles(rowData, dataField, headers, forCsv, withAuthorityIds);
             case "245" -> processTitles(rowData, dataField, headers);
             case "250" -> processEdition(rowData, dataField, headers);
             case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
@@ -451,6 +454,25 @@ public class MarcToUnifiedTableRowMapper {
           isNotEmpty(rowData.get(index)) && isNotEmpty(seriesStatement)
               ? String.join(ITEM_DELIMITER_SPACED, rowData.get(index), seriesStatement)
               : seriesStatement);
+    }
+  }
+
+  private void processAlternativeTitles(
+      List<String> rowData,
+      DataField dataField,
+      List<String> headers,
+      boolean forCsv,
+      boolean withAuthorityIds) {
+    var index = headers.indexOf(INSTANCE_ALTERNATIVE_TITLES);
+    if (index != -1) {
+      var alternativeTitle =
+          appendAuthorityId(
+              helper.fetchAlternativeTitle(dataField), dataField, forCsv, withAuthorityIds);
+      rowData.set(
+          index,
+          isNotEmpty(rowData.get(index)) && isNotEmpty(alternativeTitle)
+              ? String.join(ITEM_DELIMITER_SPACED, rowData.get(index), alternativeTitle)
+              : alternativeTitle);
     }
   }
 

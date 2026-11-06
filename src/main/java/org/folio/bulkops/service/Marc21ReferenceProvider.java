@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ALTERNATIVE_TITLES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
@@ -584,6 +585,8 @@ public class Marc21ReferenceProvider {
         .forEach(tag -> mappedFields.put(tag, INSTANCE_CLASSIFICATION));
     List.of("100", "110", "111", "700", "710", "711", "720")
         .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
+    List.of("130", "240", "246", "247")
+        .forEach(tag -> mappedFields.put(tag, INSTANCE_ALTERNATIVE_TITLES));
     mappedFields.put("245", INSTANCE_RESOURCE_TITLE);
     mappedFields.put("250", INSTANCE_EDITION);
     mappedFields.put("300", INSTANCE_PHYSICAL_DESCRIPTION);

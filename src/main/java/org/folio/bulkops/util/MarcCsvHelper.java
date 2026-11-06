@@ -1,11 +1,13 @@
 package org.folio.bulkops.util;
 
 import static java.util.Objects.nonNull;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ALTERNATIVE_TITLES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
+import static org.folio.bulkops.util.Constants.INSTANCE_ALTERNATIVE_TITLES_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_CLASSIFICATION_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_ELECTRONIC_ACCESS_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
@@ -70,12 +72,15 @@ public class MarcCsvHelper {
     var subjectData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_SUBJECT));
     var publicationData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_PUBLICATION));
     var classificationData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_CLASSIFICATION));
+    var alternativeTitlesData =
+        csvData.get(instanceHeaderNames.indexOf(INSTANCE_ALTERNATIVE_TITLES));
     csvData.set(INSTANCE_NOTE_POSITION, concatenatedNotes);
     csvData.set(INSTANCE_ELECTRONIC_ACCESS_POSITION, electronicAccessData);
     csvData.set(INSTANCE_SUBJECT_POSITION, subjectData);
     csvData.set(INSTANCE_PUBLICATION_POSITION, publicationData);
     csvData.set(INSTANCE_CLASSIFICATION_POSITION, classificationData);
-    csvData = csvData.subList(0, INSTANCE_CLASSIFICATION_POSITION + 1);
+    csvData.set(INSTANCE_ALTERNATIVE_TITLES_POSITION, alternativeTitlesData);
+    csvData = csvData.subList(0, INSTANCE_ALTERNATIVE_TITLES_POSITION + 1);
     return csvData.toArray(String[]::new);
   }
 

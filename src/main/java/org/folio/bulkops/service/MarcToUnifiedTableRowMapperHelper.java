@@ -362,6 +362,21 @@ public class MarcToUnifiedTableRowMapperHelper {
     return subfieldsToStringRemoveEndingPunctuation(dataField.getSubfields(subfields));
   }
 
+  public String fetchAlternativeTitle(DataField dataField) {
+    // same subfields as the default MARC-to-Instance mapping of alternativeTitles
+    var subfields =
+        switch (dataField.getTag()) {
+          case "130" -> "anpdfghklmorst";
+          case "240" -> "anpdfghklmors";
+          case "246" -> "anpbfgh5";
+          case "247" -> "anpbfghx";
+          default ->
+              throw new IllegalArgumentException(
+                  "Alternative title cannot be processed for field: " + dataField.getTag());
+        };
+    return subfieldsToStringRemoveEndingPunctuation(dataField.getSubfields(subfields));
+  }
+
   public String fetchNotes(DataField dataField, boolean forCsv) {
     var staffOnlyTruePostfix = forCsv ? ARRAY_DELIMITER + Boolean.TRUE : SPACE + STAFF_ONLY;
     var staffOnlyFalsePostfix = forCsv ? ARRAY_DELIMITER + Boolean.FALSE : EMPTY;

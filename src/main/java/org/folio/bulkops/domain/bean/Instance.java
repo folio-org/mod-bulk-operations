@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.folio.bulkops.domain.converter.AlternativeTitleListConverter;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.BooleanNullConverter;
 import org.folio.bulkops.domain.converter.ClassificationListConverter;
@@ -77,6 +78,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_SUBJECT = "Subject";
   public static final String INSTANCE_CLASSIFICATION = "Classification";
   public static final String INSTANCE_PUBLICATION = "Publication";
+  public static final String INSTANCE_ALTERNATIVE_TITLES = "Alternative titles";
   public static final String INSTANCE_SET_FOR_DELETION = "Set for deletion";
 
   @JsonProperty(INSTANCE_JSON_ID)
@@ -282,11 +284,16 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<Classification> classifications;
 
+  @JsonProperty("alternativeTitles")
+  @CsvCustomBindByName(
+      column = INSTANCE_ALTERNATIVE_TITLES,
+      converter = AlternativeTitleListConverter.class)
+  @CsvCustomBindByPosition(position = 29, converter = AlternativeTitleListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<AlternativeTitle> alternativeTitles;
+
   @JsonProperty("matchKey")
   private String matchKey;
-
-  @JsonProperty("alternativeTitles")
-  private List<AlternativeTitle> alternativeTitles;
 
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
