@@ -49,13 +49,12 @@ public class ListUsersService {
 
     var users =
         chunks.stream()
-            .flatMap(
-                listOfIds ->
-                    userClient
-                        .getByQuery(format(QUERY, join(OR_DELIMETER, listOfIds)), listOfIds.size())
-                        .getUsers()
-                        .stream()
-                        .map(this::mapUserToUserDto))
+            .flatMap(listOfIds ->
+                userClient
+                    .getByQuery(format(QUERY, join(OR_DELIMETER, listOfIds)), listOfIds.size())
+                    .getUsers()
+                    .stream()
+                    .map(this::mapUserToUserDto))
             .toList();
 
     return new Users().users(users).totalRecords(users.size());

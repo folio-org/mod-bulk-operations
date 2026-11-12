@@ -445,14 +445,13 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @Override
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
     getNotes()
-        .forEach(
-            note ->
-                note.setTenantId(
-                    tenantNotePairs.stream()
-                        .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-                        .map(TenantNotePair::getTenantId)
-                        .findFirst()
-                        .orElseGet(() -> tenantId)));
+        .forEach(note ->
+            note.setTenantId(
+                tenantNotePairs.stream()
+                    .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+                    .map(TenantNotePair::getTenantId)
+                    .findFirst()
+                    .orElseGet(() -> tenantId)));
   }
 
   @Override

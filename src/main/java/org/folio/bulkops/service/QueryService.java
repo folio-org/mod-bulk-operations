@@ -82,66 +82,62 @@ public class QueryService {
       BulkOperation bulkOperation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     executor.execute(
-        getRunnableWithCurrentFolioContext(
-            () -> {
-              try (var is =
-                  fqmContentFetcher.contents(
-                      bulkOperation, uuids, bulkOperationExecutionContents)) {
-                completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
-              } catch (Exception e) {
-                var errorMessage =
-                    "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
-                        + e.getMessage();
-                log.error(errorMessage);
-                failAndSaveBulkOperation(bulkOperation, errorMessage);
-              }
-            }));
+        getRunnableWithCurrentFolioContext(() -> {
+          try (var is =
+              fqmContentFetcher.contents(bulkOperation, uuids, bulkOperationExecutionContents)) {
+            completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
+          } catch (Exception e) {
+            var errorMessage =
+                "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
+                    + e.getMessage();
+            log.error(errorMessage);
+            failAndSaveBulkOperation(bulkOperation, errorMessage);
+          }
+        }));
     bulkOperation.setStatus(RETRIEVING_RECORDS);
     bulkOperationRepository.save(bulkOperation);
   }
 
   public BulkOperation retrieveRecordsQueryFlowAsync(BulkOperation bulkOperation) {
     executor.execute(
-        getRunnableWithCurrentFolioContext(
-            () -> {
-              var queryResult = getQueryResult(bulkOperation);
-              switch (queryResult.getStatus()) {
-                case IN_PROGRESS ->
-                    log.info(
-                        "Retrieving records by FQM for operation {} in progress...",
-                        bulkOperation.getId());
-                case SUCCESS -> {
-                  if (queryResult.getTotalRecords() == null || queryResult.getTotalRecords() == 0) {
-                    failAndSaveBulkOperation(bulkOperation, "No records found for the query");
-                  } else {
-                    bulkOperation.setStatus(RETRIEVING_RECORDS);
-                    bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
-                    bulkOperationRepository.save(bulkOperation);
-                    List<BulkOperationExecutionContent> bulkOperationExecutionContents =
-                        Collections.synchronizedList(new ArrayList<>());
-                    try (var is =
-                        fqmContentFetcher.fetch(
-                            bulkOperation,
-                            queryResult.getTotalRecords(),
-                            bulkOperationExecutionContents)) {
-                      completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
-                    } catch (Exception e) {
-                      var errorMessage =
-                          "Failed to save identifiers (FQM-based Query Flow), "
-                              + "reason: "
-                              + e.getMessage();
-                      log.error(errorMessage);
-                      failAndSaveBulkOperation(bulkOperation, errorMessage);
-                    }
-                  }
+        getRunnableWithCurrentFolioContext(() -> {
+          var queryResult = getQueryResult(bulkOperation);
+          switch (queryResult.getStatus()) {
+            case IN_PROGRESS ->
+                log.info(
+                    "Retrieving records by FQM for operation {} in progress...",
+                    bulkOperation.getId());
+            case SUCCESS -> {
+              if (queryResult.getTotalRecords() == null || queryResult.getTotalRecords() == 0) {
+                failAndSaveBulkOperation(bulkOperation, "No records found for the query");
+              } else {
+                bulkOperation.setStatus(RETRIEVING_RECORDS);
+                bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
+                bulkOperationRepository.save(bulkOperation);
+                List<BulkOperationExecutionContent> bulkOperationExecutionContents =
+                    Collections.synchronizedList(new ArrayList<>());
+                try (var is =
+                    fqmContentFetcher.fetch(
+                        bulkOperation,
+                        queryResult.getTotalRecords(),
+                        bulkOperationExecutionContents)) {
+                  completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
+                } catch (Exception e) {
+                  var errorMessage =
+                      "Failed to save identifiers (FQM-based Query Flow), "
+                          + "reason: "
+                          + e.getMessage();
+                  log.error(errorMessage);
+                  failAndSaveBulkOperation(bulkOperation, errorMessage);
                 }
-                case FAILED ->
-                    failAndSaveBulkOperation(bulkOperation, queryResult.getFailureReason());
-                case CANCELLED -> cancelAndSaveBulkOperation(bulkOperation);
-                default ->
-                    throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
               }
-            }));
+            }
+            case FAILED -> failAndSaveBulkOperation(bulkOperation, queryResult.getFailureReason());
+            case CANCELLED -> cancelAndSaveBulkOperation(bulkOperation);
+            default ->
+                throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
+          }
+        }));
     bulkOperationRepository.save(bulkOperation);
     return bulkOperation;
   }

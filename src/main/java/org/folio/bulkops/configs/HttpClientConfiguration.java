@@ -334,18 +334,16 @@ public class HttpClientConfiguration {
     var restClient =
         restClientBuilder
             .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
-            .configureMessageConverters(
-                cb -> {
-                  var converter = new ByteArrayHttpMessageConverter();
-                  converter.setSupportedMediaTypes(List.of(MediaType.APPLICATION_OCTET_STREAM));
-                  cb.addCustomConverter(converter);
-                })
-            .requestInterceptor(
-                (request, body, execution) -> {
-                  log.debug("Request URL: {}", request.getURI());
-                  request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
-                  return execution.execute(request, body);
-                })
+            .configureMessageConverters(cb -> {
+              var converter = new ByteArrayHttpMessageConverter();
+              converter.setSupportedMediaTypes(List.of(MediaType.APPLICATION_OCTET_STREAM));
+              cb.addCustomConverter(converter);
+            })
+            .requestInterceptor((request, body, execution) -> {
+              log.debug("Request URL: {}", request.getURI());
+              request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
+              return execution.execute(request, body);
+            })
             .build();
 
     return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient)).build();

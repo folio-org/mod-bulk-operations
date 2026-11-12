@@ -37,7 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class UpdateOptionTypeToFieldResolverTest {
 
-  @ParameterizedTest()
+  @ParameterizedTest
   @MethodSource("fieldToOptionToEntity")
   void getFieldByUpdateOptionTypeTest(
       String expected, org.folio.bulkops.domain.dto.UpdateOptionType type, EntityType entityType) {

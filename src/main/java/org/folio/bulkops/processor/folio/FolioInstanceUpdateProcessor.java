@@ -196,11 +196,10 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
     if (holdingsForUpdate.isEmpty()) {
       return false;
     }
-    holdingsForUpdate.forEach(
-        holdingsRecord -> {
-          var patchBody = HoldingsPatchUtils.createPatchForSuppress(holdingsRecord, suppress);
-          holdingsStorageClient.patchHoldingsRecord(patchBody, holdingsRecord.getId());
-        });
+    holdingsForUpdate.forEach(holdingsRecord -> {
+      var patchBody = HoldingsPatchUtils.createPatchForSuppress(holdingsRecord, suppress);
+      holdingsStorageClient.patchHoldingsRecord(patchBody, holdingsRecord.getId());
+    });
     return true;
   }
 
@@ -210,10 +209,9 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
         applyToItems
             ? holdingsRecords.stream()
                 .map(HoldingsRecord::getId)
-                .map(
-                    id ->
-                        itemClient.getByQuery(
-                            format(GET_ITEMS_BY_HOLDING_ID_QUERY, id), Integer.MAX_VALUE))
+                .map(id ->
+                    itemClient.getByQuery(
+                        format(GET_ITEMS_BY_HOLDING_ID_QUERY, id), Integer.MAX_VALUE))
                 .map(ItemCollection::getItems)
                 .flatMap(List::stream)
                 .filter(item -> suppress != item.getDiscoverySuppress())
@@ -223,12 +221,11 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
     if (itemsForUpdate.isEmpty()) {
       return false;
     }
-    itemsForUpdate.forEach(
-        item -> {
-          var patchBody = createPatchBody(item);
-          addDiscoverySuppress(patchBody, suppress);
-          itemClient.patchItem(patchBody, item.getId());
-        });
+    itemsForUpdate.forEach(item -> {
+      var patchBody = createPatchBody(item);
+      addDiscoverySuppress(patchBody, suppress);
+      itemClient.patchItem(patchBody, item.getId());
+    });
     return true;
   }
 
@@ -247,10 +244,9 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
         .getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
         .getHoldingsRecords()
         .stream()
-        .filter(
-            holdingsRecord ->
-                !MARC.equals(
-                    holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
+        .filter(holdingsRecord ->
+            !MARC.equals(
+                holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
         .toList();
   }
 

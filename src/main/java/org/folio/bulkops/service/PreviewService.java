@@ -244,23 +244,22 @@ public class PreviewService {
       var marcRecords = findMarcRecordsByHrids(linkToMarcFile, hrids);
       inventoryTable
           .getRows()
-          .forEach(
-              inventoryRow -> {
-                if (FOLIO.equals(inventoryRow.getRow().get(sourcePosition))) {
-                  compositeTable.addRowsItem(inventoryRow);
-                } else {
-                  var hrid = inventoryRow.getRow().get(hridPosition);
-                  if (marcRecords.containsKey(hrid)) {
-                    var marcRow =
-                        new Row()
-                            .row(
-                                marcToUnifiedTableRowMapper.processRecord(
-                                    marcRecords.get(hrid), headers, false));
-                    enrichRowWithAdministrativeData(marcRow, inventoryRow);
-                    compositeTable.addRowsItem(marcRow);
-                  }
-                }
-              });
+          .forEach(inventoryRow -> {
+            if (FOLIO.equals(inventoryRow.getRow().get(sourcePosition))) {
+              compositeTable.addRowsItem(inventoryRow);
+            } else {
+              var hrid = inventoryRow.getRow().get(hridPosition);
+              if (marcRecords.containsKey(hrid)) {
+                var marcRow =
+                    new Row()
+                        .row(
+                            marcToUnifiedTableRowMapper.processRecord(
+                                marcRecords.get(hrid), headers, false));
+                enrichRowWithAdministrativeData(marcRow, inventoryRow);
+                compositeTable.addRowsItem(marcRow);
+              }
+            }
+          });
       forceVisibleAdministrativeDataHeaders(compositeTable, bulkOperation);
       return compositeTable;
     }
@@ -275,24 +274,21 @@ public class PreviewService {
         rules.getBulkOperationRules().stream()
             .map(BulkOperationRule::getRuleDetails)
             .map(RuleDetails::getOption)
-            .map(
-                option ->
-                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
+            .map(option ->
+                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
             .collect(Collectors.toSet());
     unifiedTable
         .getHeader()
-        .forEach(
-            header -> {
-              if (forceVisibleFieldNames.contains(header.getValue())) {
-                header.setForceVisible(true);
-              }
-            });
+        .forEach(header -> {
+          if (forceVisibleFieldNames.contains(header.getValue())) {
+            header.setForceVisible(true);
+          }
+        });
     if (isSetForDeletionForceVisible(unifiedTable)) {
       unifiedTable.getHeader().stream()
-          .filter(
-              header ->
-                  header.getValue().equals("Staff suppress")
-                      || header.getValue().equals("Suppress from discovery"))
+          .filter(header ->
+              header.getValue().equals("Staff suppress")
+                  || header.getValue().equals("Suppress from discovery"))
           .forEach(header -> header.setForceVisible(true));
     }
   }
@@ -306,12 +302,11 @@ public class PreviewService {
   private void forceVisibleMarcFields(UnifiedTable unifiedTable, Set<String> changedOptionsSet) {
     unifiedTable
         .getHeader()
-        .forEach(
-            cell -> {
-              if (changedOptionsSet.contains(cell.getValue())) {
-                cell.setForceVisible(true);
-              }
-            });
+        .forEach(cell -> {
+          if (changedOptionsSet.contains(cell.getValue())) {
+            cell.setForceVisible(true);
+          }
+        });
   }
 
   private void enrichRowWithAdministrativeData(Row marcRow, Row inventoryRow) {
@@ -421,67 +416,62 @@ public class PreviewService {
     var bulkOperation = bulkOperationService.getOperationById(bulkOperationId);
     rules
         .getBulkOperationRules()
-        .forEach(
-            rule -> {
-              var option = rule.getRuleDetails().getOption();
-              if (SET_RECORDS_FOR_DELETE == option && entityType == INSTANCE) {
-                forceVisibleOptions.add(
-                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                        STAFF_SUPPRESS, entityType));
-                forceVisibleOptions.add(
-                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                        SUPPRESS_FROM_DISCOVERY, entityType));
-              }
-              rule.getRuleDetails()
-                  .getActions()
-                  .forEach(
-                      action -> {
-                        if (action.getType() == UpdateActionType.CHANGE_TYPE) {
+        .forEach(rule -> {
+          var option = rule.getRuleDetails().getOption();
+          if (SET_RECORDS_FOR_DELETE == option && entityType == INSTANCE) {
+            forceVisibleOptions.add(
+                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                    STAFF_SUPPRESS, entityType));
+            forceVisibleOptions.add(
+                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                    SUPPRESS_FROM_DISCOVERY, entityType));
+          }
+          rule.getRuleDetails()
+              .getActions()
+              .forEach(action -> {
+                if (action.getType() == UpdateActionType.CHANGE_TYPE) {
 
-                          Optional<String> initial = getInitialNoteTypeId(entityType, action);
+                  Optional<String> initial = getInitialNoteTypeId(entityType, action);
 
-                          if (initial.isPresent()) {
-                            processInitialNoteType(
-                                bulkOperation, forceVisibleOptions, initial.get(), clazz);
-                          } else {
-                            forceVisibleOptions.add(
-                                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                                    option, entityType));
-                          }
+                  if (initial.isPresent()) {
+                    processInitialNoteType(
+                        bulkOperation, forceVisibleOptions, initial.get(), clazz);
+                  } else {
+                    forceVisibleOptions.add(
+                        UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                            option, entityType));
+                  }
 
-                          var updated = action.getUpdated();
-                          if (UUID_REGEX.matcher(updated).matches()) {
-                            processUpdatedNoteType(
-                                bulkOperation, forceVisibleOptions, updated, clazz);
-                          } else {
-                            forceVisibleOptions.add(
-                                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                                    UpdateOptionType.fromValue(updated), entityType));
-                          }
-                        } else if (action.getType() == UpdateActionType.DUPLICATE) {
-                          forceVisibleOptions.add(
-                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                                  option, entityType));
-                          forceVisibleOptions.add(
-                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                                  UpdateOptionType.fromValue(action.getUpdated()), entityType));
-                        } else if (ITEM_NOTE == option) {
-                          pricessInitialForItemNote(
-                              bulkOperation, forceVisibleOptions, action, clazz);
-                        } else if (HOLDINGS_NOTE == option) {
-                          processInitialHoldingsNote(
-                              bulkOperation, forceVisibleOptions, action, clazz);
-                        } else if (INSTANCE_NOTE == option) {
-                          processInitialInstanceNote(forceVisibleOptions, action, clazz);
-                        } else {
-                          // Default common case - the only this case should be processed in right
-                          // approach
-                          forceVisibleOptions.add(
-                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                                  option, entityType));
-                        }
-                      });
-            });
+                  var updated = action.getUpdated();
+                  if (UUID_REGEX.matcher(updated).matches()) {
+                    processUpdatedNoteType(bulkOperation, forceVisibleOptions, updated, clazz);
+                  } else {
+                    forceVisibleOptions.add(
+                        UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                            UpdateOptionType.fromValue(updated), entityType));
+                  }
+                } else if (action.getType() == UpdateActionType.DUPLICATE) {
+                  forceVisibleOptions.add(
+                      UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                          option, entityType));
+                  forceVisibleOptions.add(
+                      UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                          UpdateOptionType.fromValue(action.getUpdated()), entityType));
+                } else if (ITEM_NOTE == option) {
+                  pricessInitialForItemNote(bulkOperation, forceVisibleOptions, action, clazz);
+                } else if (HOLDINGS_NOTE == option) {
+                  processInitialHoldingsNote(bulkOperation, forceVisibleOptions, action, clazz);
+                } else if (INSTANCE_NOTE == option) {
+                  processInitialInstanceNote(forceVisibleOptions, action, clazz);
+                } else {
+                  // Default common case - the only this case should be processed in right
+                  // approach
+                  forceVisibleOptions.add(
+                      UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                          option, entityType));
+                }
+              });
+        });
     log.info(
         "Bulk Operation ID: {}, forced to visible fields: {}",
         bulkOperationId.toString(),
@@ -542,36 +532,34 @@ public class PreviewService {
       StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
           .skip(offset)
           .limit(limit)
-          .forEach(
-              entity -> {
-                if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
-                    || clazz == User.class) {
-                  var ent =
-                      clazz == User.class
-                          ? entity
-                          : ((BulkOperationsEntity) entity).getRecordBulkOperationEntity();
-                  table.addRowsItem(processor.transformToRow((BulkOperationsEntity) ent));
-                } else {
-                  try (var ignored =
-                      new FolioExecutionContextSetter(
-                          prepareContextForTenant(
-                              ((BulkOperationsEntity) entity).getTenant(),
-                              folioModuleMetadata,
-                              folioExecutionContext))) {
-                    table.addRowsItem(
-                        processor.transformToRow(
-                            ((BulkOperationsEntity) entity).getRecordBulkOperationEntity()));
-                  }
-                }
-              });
+          .forEach(entity -> {
+            if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
+                || clazz == User.class) {
+              var ent =
+                  clazz == User.class
+                      ? entity
+                      : ((BulkOperationsEntity) entity).getRecordBulkOperationEntity();
+              table.addRowsItem(processor.transformToRow((BulkOperationsEntity) ent));
+            } else {
+              try (var ignored =
+                  new FolioExecutionContextSetter(
+                      prepareContextForTenant(
+                          ((BulkOperationsEntity) entity).getTenant(),
+                          folioModuleMetadata,
+                          folioExecutionContext))) {
+                table.addRowsItem(
+                    processor.transformToRow(
+                        ((BulkOperationsEntity) entity).getRecordBulkOperationEntity()));
+              }
+            }
+          });
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table
           .getRows()
-          .forEach(
-              row -> {
-                var rowData = removeSubColumnsAndGetRowForPreview(row);
-                row.setRow(SpecialCharacterEscaper.restore(rowData));
-              });
+          .forEach(row -> {
+            var rowData = removeSubColumnsAndGetRowForPreview(row);
+            row.setRow(SpecialCharacterEscaper.restore(rowData));
+          });
       tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
       return table;
     } catch (Exception e) {
@@ -606,12 +594,11 @@ public class PreviewService {
 
   private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {
     return ofNullable(bulkOperation.getTenantNotePairs())
-        .flatMap(
-            pairs ->
-                pairs.stream()
-                    .filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
-                    .map(TenantNotePair::getNoteTypeName)
-                    .findFirst());
+        .flatMap(pairs ->
+            pairs.stream()
+                .filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
+                .map(TenantNotePair::getNoteTypeName)
+                .findFirst());
   }
 
   private Optional<String> getInitialNoteTypeId(
@@ -697,18 +684,17 @@ public class PreviewService {
             .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
             .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(
-        id -> {
-          var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-          if (noteTypeName.isPresent()) {
-            forceVisibleOptions.add(noteTypeName.get());
-          } else {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
-            }
-          }
-        });
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+    });
   }
 
   private void processInitialInstanceNote(
@@ -720,13 +706,12 @@ public class PreviewService {
             .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
             .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(
-        id -> {
-          var type = resolveAndGetItemTypeById(clazz, id);
-          if (StringUtils.isNotEmpty(type)) {
-            forceVisibleOptions.add(type);
-          }
-        });
+    initial.ifPresent(id -> {
+      var type = resolveAndGetItemTypeById(clazz, id);
+      if (StringUtils.isNotEmpty(type)) {
+        forceVisibleOptions.add(type);
+      }
+    });
   }
 
   private void pricessInitialForItemNote(
@@ -739,17 +724,16 @@ public class PreviewService {
             .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
             .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(
-        id -> {
-          var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-          if (noteTypeName.isPresent()) {
-            forceVisibleOptions.add(noteTypeName.get());
-          } else {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
-            }
-          }
-        });
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+    });
   }
 }

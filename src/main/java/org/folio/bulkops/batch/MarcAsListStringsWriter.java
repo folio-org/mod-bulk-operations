@@ -47,16 +47,15 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
             .map(this::getIdIfExtendedInstanceMarc)
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .map(
-                id -> {
-                  try {
-                    return getMarcContent(id);
-                  } catch (Exception e) {
-                    log.error(e);
-                    throw new BulkEditException(
-                        NO_MARC_CONTENT.formatted(id, e.getMessage()), ErrorType.ERROR);
-                  }
-                })
+            .map(id -> {
+              try {
+                return getMarcContent(id);
+              } catch (Exception e) {
+                log.error(e);
+                throw new BulkEditException(
+                    NO_MARC_CONTENT.formatted(id, e.getMessage()), ErrorType.ERROR);
+              }
+            })
             .flatMap(List::stream)
             .filter(Objects::nonNull)
             .toList();

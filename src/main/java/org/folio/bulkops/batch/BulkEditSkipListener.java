@@ -32,13 +32,12 @@ public class BulkEditSkipListener {
         .map(UUID::fromString)
         .map(bulkOperationRepository::findById)
         .flatMap(opt -> opt)
-        .ifPresent(
-            bulkOperation ->
-                errorService.saveError(
-                    bulkOperation.getId(),
-                    itemIdentifier.getItemId(),
-                    exception.getMessage(),
-                    exception.getErrorType()));
+        .ifPresent(bulkOperation ->
+            errorService.saveError(
+                bulkOperation.getId(),
+                itemIdentifier.getItemId(),
+                exception.getMessage(),
+                exception.getErrorType()));
     var context = jobExecution.getExecutionContext();
     int processed = 1;
     if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {

@@ -45,45 +45,37 @@ public class ElectronicAccessUpdaterFactory {
       case CLEAR_FIELD ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> electronicAccess.setRelationshipId(null)));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
 
       case FIND_AND_REMOVE_THESE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (equalsIgnoreCase(
-                                    electronicAccess.getRelationshipId(), action.getInitial())) {
-                                  electronicAccess.setRelationshipId(null);
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (equalsIgnoreCase(
+                            electronicAccess.getRelationshipId(), action.getInitial())) {
+                          electronicAccess.setRelationshipId(null);
+                        }
+                      }));
 
       case FIND_AND_REPLACE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (equalsIgnoreCase(
-                                    electronicAccess.getRelationshipId(), action.getInitial())) {
-                                  electronicAccess.setRelationshipId(getRelationshipId(action));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (equalsIgnoreCase(
+                            electronicAccess.getRelationshipId(), action.getInitial())) {
+                          electronicAccess.setRelationshipId(getRelationshipId(action));
+                        }
+                      }));
 
       case REPLACE_WITH ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setRelationshipId(getRelationshipId(action))));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess ->
+                          electronicAccess.setRelationshipId(getRelationshipId(action))));
 
       default -> notSupported(option, action);
     };
@@ -107,44 +99,36 @@ public class ElectronicAccessUpdaterFactory {
       case FIND_AND_REMOVE_THESE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(electronicAccess.getUri(), action.getInitial())) {
-                                  electronicAccess.setUri(
-                                      electronicAccess
-                                          .getUri()
-                                          .replace(action.getInitial(), EMPTY));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getUri(), action.getInitial())) {
+                          electronicAccess.setUri(
+                              electronicAccess.getUri().replace(action.getInitial(), EMPTY));
+                        }
+                      }));
 
       case FIND_AND_REPLACE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(electronicAccess.getUri(), action.getInitial())) {
-                                  electronicAccess.setUri(
-                                      isNull(action.getUpdated())
-                                          ? EMPTY
-                                          : electronicAccess
-                                              .getUri()
-                                              .replace(action.getInitial(), action.getUpdated()));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getUri(), action.getInitial())) {
+                          electronicAccess.setUri(
+                              isNull(action.getUpdated())
+                                  ? EMPTY
+                                  : electronicAccess
+                                      .getUri()
+                                      .replace(action.getInitial(), action.getUpdated()));
+                        }
+                      }));
 
       case REPLACE_WITH ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setUri(
-                                      isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess ->
+                          electronicAccess.setUri(
+                              isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
 
       default -> notSupported(option, action);
     };
@@ -161,42 +145,34 @@ public class ElectronicAccessUpdaterFactory {
       case FIND_AND_REMOVE_THESE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(electronicAccess.getLinkText(), action.getInitial())) {
-                                  electronicAccess.setLinkText(
-                                      electronicAccess
-                                          .getLinkText()
-                                          .replace(action.getInitial(), EMPTY));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getLinkText(), action.getInitial())) {
+                          electronicAccess.setLinkText(
+                              electronicAccess.getLinkText().replace(action.getInitial(), EMPTY));
+                        }
+                      }));
 
       case FIND_AND_REPLACE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(electronicAccess.getLinkText(), action.getInitial())) {
-                                  electronicAccess.setLinkText(
-                                      replace(
-                                          electronicAccess.getLinkText(),
-                                          action.getInitial(),
-                                          action.getUpdated()));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getLinkText(), action.getInitial())) {
+                          electronicAccess.setLinkText(
+                              replace(
+                                  electronicAccess.getLinkText(),
+                                  action.getInitial(),
+                                  action.getUpdated()));
+                        }
+                      }));
 
       case REPLACE_WITH ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setLinkText(action.getUpdated())));
+                  .ifPresent(list ->
+                      list.forEach(
+                          electronicAccess -> electronicAccess.setLinkText(action.getUpdated())));
 
       default -> notSupported(option, action);
     };
@@ -208,55 +184,45 @@ public class ElectronicAccessUpdaterFactory {
       case CLEAR_FIELD ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setMaterialsSpecification(null)));
+                  .ifPresent(list ->
+                      list.forEach(
+                          electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
 
       case FIND_AND_REMOVE_THESE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(
-                                    electronicAccess.getMaterialsSpecification(),
-                                    action.getInitial())) {
-                                  electronicAccess.setMaterialsSpecification(
-                                      electronicAccess
-                                          .getMaterialsSpecification()
-                                          .replace(action.getInitial(), EMPTY));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(
+                            electronicAccess.getMaterialsSpecification(), action.getInitial())) {
+                          electronicAccess.setMaterialsSpecification(
+                              electronicAccess
+                                  .getMaterialsSpecification()
+                                  .replace(action.getInitial(), EMPTY));
+                        }
+                      }));
 
       case FIND_AND_REPLACE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(
-                                    electronicAccess.getMaterialsSpecification(),
-                                    action.getInitial())) {
-                                  electronicAccess.setMaterialsSpecification(
-                                      replace(
-                                          electronicAccess.getMaterialsSpecification(),
-                                          action.getInitial(),
-                                          action.getUpdated()));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(
+                            electronicAccess.getMaterialsSpecification(), action.getInitial())) {
+                          electronicAccess.setMaterialsSpecification(
+                              replace(
+                                  electronicAccess.getMaterialsSpecification(),
+                                  action.getInitial(),
+                                  action.getUpdated()));
+                        }
+                      }));
 
       case REPLACE_WITH ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setMaterialsSpecification(action.getUpdated())));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess ->
+                          electronicAccess.setMaterialsSpecification(action.getUpdated())));
 
       default -> notSupported(option, action);
     };
@@ -267,51 +233,40 @@ public class ElectronicAccessUpdaterFactory {
       case CLEAR_FIELD ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
 
       case FIND_AND_REMOVE_THESE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(
-                                    electronicAccess.getPublicNote(), action.getInitial())) {
-                                  electronicAccess.setPublicNote(
-                                      electronicAccess
-                                          .getPublicNote()
-                                          .replace(action.getInitial(), EMPTY));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getPublicNote(), action.getInitial())) {
+                          electronicAccess.setPublicNote(
+                              electronicAccess.getPublicNote().replace(action.getInitial(), EMPTY));
+                        }
+                      }));
 
       case FIND_AND_REPLACE ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess -> {
-                                if (contains(
-                                    electronicAccess.getPublicNote(), action.getInitial())) {
-                                  electronicAccess.setPublicNote(
-                                      replace(
-                                          electronicAccess.getPublicNote(),
-                                          action.getInitial(),
-                                          action.getUpdated()));
-                                }
-                              }));
+                  .ifPresent(list ->
+                      list.forEach(electronicAccess -> {
+                        if (contains(electronicAccess.getPublicNote(), action.getInitial())) {
+                          electronicAccess.setPublicNote(
+                              replace(
+                                  electronicAccess.getPublicNote(),
+                                  action.getInitial(),
+                                  action.getUpdated()));
+                        }
+                      }));
 
       case REPLACE_WITH ->
           electronicAccessEntity ->
               ofNullable(electronicAccessEntity.getElectronicAccess())
-                  .ifPresent(
-                      list ->
-                          list.forEach(
-                              electronicAccess ->
-                                  electronicAccess.setPublicNote(action.getUpdated())));
+                  .ifPresent(list ->
+                      list.forEach(
+                          electronicAccess -> electronicAccess.setPublicNote(action.getUpdated())));
 
       default -> notSupported(option, action);
     };
