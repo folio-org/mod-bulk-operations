@@ -274,23 +274,22 @@ class FqmContentFetcherEcsTest {
     List<Map<String, Object>> mock = new ArrayList<>();
 
     /* Adding entities ids all together for mock - just emulation */
-    uuids.forEach(
-        uuid -> {
-          Map<String, Object> map = new HashMap<>();
-          map.put("instance.id", uuid.toString());
-          map.put("users.id", uuid.toString());
-          map.put("items.id", uuid.toString());
-          map.put("holdings.id", uuid.toString());
-          map.put("instance.tenant_id", "some-tenant");
-          map.put("users.tenant_id", "some-tenant");
-          map.put("items.tenant_id", "some-tenant");
-          map.put("holdings.tenant_id", "some-tenant");
-          map.put("instance.jsonb", "{\"id\": \"" + uuid + "\"}");
-          map.put("users.jsonb", "{\"id\": \"" + uuid + "\"}");
-          map.put("items.jsonb", "{\"id\": \"" + uuid + "\"}");
-          map.put("holdings.jsonb", "{\"id\": \"" + uuid + "\"}");
-          mock.add(map);
-        });
+    uuids.forEach(uuid -> {
+      Map<String, Object> map = new HashMap<>();
+      map.put("instance.id", uuid.toString());
+      map.put("users.id", uuid.toString());
+      map.put("items.id", uuid.toString());
+      map.put("holdings.id", uuid.toString());
+      map.put("instance.tenant_id", "some-tenant");
+      map.put("users.tenant_id", "some-tenant");
+      map.put("items.tenant_id", "some-tenant");
+      map.put("holdings.tenant_id", "some-tenant");
+      map.put("instance.jsonb", "{\"id\": \"" + uuid + "\"}");
+      map.put("users.jsonb", "{\"id\": \"" + uuid + "\"}");
+      map.put("items.jsonb", "{\"id\": \"" + uuid + "\"}");
+      map.put("holdings.jsonb", "{\"id\": \"" + uuid + "\"}");
+      mock.add(map);
+    });
 
     when(queryClient.getContents(any())).thenReturn(mock);
   }
@@ -389,11 +388,10 @@ class FqmContentFetcherEcsTest {
               .toList();
       assertThat(missingIds, Matchers.containsInAnyOrder(uuid2.toString(), uuid3.toString()));
 
-      bulkOperationExecutionContents.forEach(
-          content -> {
-            assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
-            assertThat(content.getBulkOperationId(), Matchers.is(operationId));
-          });
+      bulkOperationExecutionContents.forEach(content -> {
+        assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
+        assertThat(content.getBulkOperationId(), Matchers.is(operationId));
+      });
 
       // Verify that only found holding is sent to query client
       ContentsRequest req = captor.getValue();
@@ -497,11 +495,10 @@ class FqmContentFetcherEcsTest {
               .toList();
       assertThat(missingIds, Matchers.containsInAnyOrder(uuid1.toString(), uuid2.toString()));
 
-      bulkOperationExecutionContents.forEach(
-          content -> {
-            assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
-            assertThat(content.getBulkOperationId(), Matchers.is(operationId));
-          });
+      bulkOperationExecutionContents.forEach(content -> {
+        assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
+        assertThat(content.getBulkOperationId(), Matchers.is(operationId));
+      });
 
       ContentsRequest req = captor.getValue();
       List<List<String>> ids = req.getIds();

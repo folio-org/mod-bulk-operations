@@ -43,9 +43,8 @@ public class InstanceNotesUpdaterFactory {
       case REMOVE_ALL ->
           Optional.of(extendedInstance -> removeAll(extendedInstance.getEntity(), action, option));
       case ADD_TO_EXISTING ->
-          Optional.of(
-              extendedInstance ->
-                  addToExisting(extendedInstance.getEntity(), action, option, forPreview));
+          Optional.of(extendedInstance ->
+              addToExisting(extendedInstance.getEntity(), action, option, forPreview));
       case FIND_AND_REMOVE_THESE ->
           Optional.of(
               extendedInstance -> findAndRemove(extendedInstance.getEntity(), action, option));
@@ -64,14 +63,11 @@ public class InstanceNotesUpdaterFactory {
   private void setStaffOnly(Instance instance, Action action, UpdateOptionType option) {
     if (INSTANCE_NOTE.equals(option) && isNotEmpty(instance.getInstanceNotes())) {
       getTypeIdOptional(action.getParameters())
-          .ifPresent(
-              typeId ->
-                  instance.getInstanceNotes().stream()
-                      .filter(instanceNote -> typeId.equals(instanceNote.getInstanceNoteTypeId()))
-                      .forEach(
-                          instanceNote ->
-                              instanceNote.setStaffOnly(
-                                  MARK_AS_STAFF_ONLY.equals(action.getType()))));
+          .ifPresent(typeId ->
+              instance.getInstanceNotes().stream()
+                  .filter(instanceNote -> typeId.equals(instanceNote.getInstanceNoteTypeId()))
+                  .forEach(instanceNote ->
+                      instanceNote.setStaffOnly(MARK_AS_STAFF_ONLY.equals(action.getType()))));
     }
   }
 
@@ -147,12 +143,11 @@ public class InstanceNotesUpdaterFactory {
         } else {
           instance
               .getInstanceNotes()
-              .forEach(
-                  instanceNote -> {
-                    if (typeId.equals(instanceNote.getInstanceNoteTypeId())) {
-                      instanceNote.setInstanceNoteTypeId(action.getUpdated());
-                    }
-                  });
+              .forEach(instanceNote -> {
+                if (typeId.equals(instanceNote.getInstanceNoteTypeId())) {
+                  instanceNote.setInstanceNoteTypeId(action.getUpdated());
+                }
+              });
         }
       }
     } else if (ADMINISTRATIVE_NOTE.equals(option)) {
@@ -225,15 +220,14 @@ public class InstanceNotesUpdaterFactory {
       var notesToRemove = new ArrayList<InstanceNote>();
       notes.stream()
           .filter(note -> StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get()))
-          .forEach(
-              note -> {
-                String updatedNote = note.getNote().replace(valueToRemove, EMPTY);
-                if (updatedNote.isBlank()) {
-                  notesToRemove.add(note);
-                } else {
-                  note.setNote(updatedNote);
-                }
-              });
+          .forEach(note -> {
+            String updatedNote = note.getNote().replace(valueToRemove, EMPTY);
+            if (updatedNote.isBlank()) {
+              notesToRemove.add(note);
+            } else {
+              note.setNote(updatedNote);
+            }
+          });
       notes.removeAll(notesToRemove);
     }
     return notes;
@@ -243,19 +237,17 @@ public class InstanceNotesUpdaterFactory {
     var typeIdOptional = getTypeIdOptional(action.getParameters());
     if (typeIdOptional.isPresent() && notes != null) {
       var notesToRemove = new ArrayList<InstanceNote>();
-      notes.forEach(
-          note -> {
-            if (StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
-                && contains(note.getNote(), action.getInitial())) {
-              String replacedNote =
-                  replace(note.getNote(), action.getInitial(), action.getUpdated());
-              if (replacedNote.isBlank()) {
-                notesToRemove.add(note);
-              } else {
-                note.setNote(replacedNote);
-              }
-            }
-          });
+      notes.forEach(note -> {
+        if (StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
+            && contains(note.getNote(), action.getInitial())) {
+          String replacedNote = replace(note.getNote(), action.getInitial(), action.getUpdated());
+          if (replacedNote.isBlank()) {
+            notesToRemove.add(note);
+          } else {
+            note.setNote(replacedNote);
+          }
+        }
+      });
       notes.removeAll(notesToRemove);
     }
   }

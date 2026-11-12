@@ -74,49 +74,48 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         .map(UUID::fromString)
         .map(bulkOperationRepository::findById)
         .flatMap(opt -> opt)
-        .ifPresent(
-            bulkOperation -> {
-              if (after) {
-                var jobParameters = jobExecution.getJobParameters();
-                moveTemporaryFilesToStorage(jobParameters, bulkOperation);
-                handleProcessingMatchedErrors(bulkOperation);
-                if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-                  populateUsedTenants(bulkOperation);
-                }
+        .ifPresent(bulkOperation -> {
+          if (after) {
+            var jobParameters = jobExecution.getJobParameters();
+            moveTemporaryFilesToStorage(jobParameters, bulkOperation);
+            handleProcessingMatchedErrors(bulkOperation);
+            if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+              populateUsedTenants(bulkOperation);
+            }
 
-                log.info("-----------------------------JOB---ENDS-----------------------------");
-              }
+            log.info("-----------------------------JOB---ENDS-----------------------------");
+          }
 
-              var context = jobExecution.getExecutionContext();
+          var context = jobExecution.getExecutionContext();
 
-              int processed =
-                  context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)
-                      ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)
-                      : 0;
-              bulkOperation.setProcessedNumOfRecords(processed);
+          int processed =
+              context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)
+                  ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)
+                  : 0;
+          bulkOperation.setProcessedNumOfRecords(processed);
 
-              int matched =
-                  context.containsKey(NUMBER_OF_MATCHED_RECORDS)
-                      ? context.getInt(NUMBER_OF_MATCHED_RECORDS)
-                      : 0;
-              bulkOperation.setMatchedNumOfRecords(matched);
+          int matched =
+              context.containsKey(NUMBER_OF_MATCHED_RECORDS)
+                  ? context.getInt(NUMBER_OF_MATCHED_RECORDS)
+                  : 0;
+          bulkOperation.setMatchedNumOfRecords(matched);
 
-              if (COMPLETED.equals(jobExecution.getStatus())) {
-                bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
-                bulkOperation.setEndTime(LocalDateTime.now());
+          if (COMPLETED.equals(jobExecution.getStatus())) {
+            bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
+            bulkOperation.setEndTime(LocalDateTime.now());
 
-                if (nonNull(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())
-                    && isNull(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
-                  bulkOperation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-                }
-              } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
-                bulkOperation.setStatus(OperationStatusType.FAILED);
-                bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
-                bulkOperation.setEndTime(LocalDateTime.now());
-              }
+            if (nonNull(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())
+                && isNull(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
+              bulkOperation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+            }
+          } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
+            bulkOperation.setStatus(OperationStatusType.FAILED);
+            bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
+            bulkOperation.setEndTime(LocalDateTime.now());
+          }
 
-              bulkOperationRepository.save(bulkOperation);
-            });
+          bulkOperationRepository.save(bulkOperation);
+        });
   }
 
   private void populateUsedTenants(BulkOperation bulkOperation) {
@@ -156,12 +155,11 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
     List<Throwable> errors = jobExecution.getAllFailureExceptions();
     if (CollectionUtils.isNotEmpty(errors)) {
       return errors.stream()
-          .map(
-              t -> {
-                var root = getThrowableRootCause(t);
-                var className = root.getClass().getSimpleName();
-                return String.format("%s (%s)", root.getMessage(), className);
-              })
+          .map(t -> {
+            var root = getThrowableRootCause(t);
+            var className = root.getClass().getSimpleName();
+            return String.format("%s (%s)", root.getMessage(), className);
+          })
           .collect(Collectors.joining("\n"));
     }
     return EMPTY;

@@ -54,12 +54,11 @@ public class HoldingsNotesProcessor extends CsvDownloadPreProcessor {
       }
       var noteTypes =
           noteTypesFromUsedTenants.stream()
-              .map(
-                  note ->
-                      new NoteType()
-                          .withName(note.getName())
-                          .withTenantId(note.getTenantId())
-                          .withId(note.getId()))
+              .map(note ->
+                  new NoteType()
+                      .withName(note.getName())
+                      .withTenantId(note.getTenantId())
+                      .withId(note.getId()))
               .toList();
       noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypes);
       noteTypeNamesSet.addAll(

@@ -88,12 +88,11 @@ public class NoteTableUpdater {
       }
       var noteTypes =
           noteTypesFromUsedTenants.stream()
-              .map(
-                  note ->
-                      new NoteType()
-                          .withName(note.getName())
-                          .withTenantId(note.getTenantId())
-                          .withId(note.getId()))
+              .map(note ->
+                  new NoteType()
+                      .withName(note.getName())
+                      .withTenantId(note.getTenantId())
+                      .withId(note.getId()))
               .toList();
       updateNoteTypeNamesWithTenants(noteTypes);
       tenantNotePairs.addAll(getTenantNotePairs(bulkOperation, noteTypes));
@@ -105,15 +104,10 @@ public class NoteTableUpdater {
         HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable
         .getRows()
-        .forEach(
-            row ->
-                row.setRow(
-                    enrichWithNotesByType(
-                        row.getRow(),
-                        HOLDINGS_NOTE_POSITION,
-                        noteTypeNames,
-                        tenantNotePairs,
-                        false)));
+        .forEach(row ->
+            row.setRow(
+                enrichWithNotesByType(
+                    row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithItemNotesTypes(
@@ -146,11 +140,10 @@ public class NoteTableUpdater {
         ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable
         .getRows()
-        .forEach(
-            row ->
-                row.setRow(
-                    enrichWithNotesByType(
-                        row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
+        .forEach(row ->
+            row.setRow(
+                enrichWithNotesByType(
+                    row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithInstanceNotesTypes(
@@ -166,11 +159,10 @@ public class NoteTableUpdater {
           INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
       unifiedTable
           .getRows()
-          .forEach(
-              row ->
-                  row.setRow(
-                      enrichWithNotesByType(
-                          row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, null, true)));
+          .forEach(row ->
+              row.setRow(
+                  enrichWithNotesByType(
+                      row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, null, true)));
     }
   }
 
@@ -189,14 +181,13 @@ public class NoteTableUpdater {
     var headerToReplace = headers.get(notesInitialPosition);
     var cellsToInsert =
         noteTypeNames.stream()
-            .map(
-                name ->
-                    new Cell()
-                        .value(concatNotePostfixIfRequired(name))
-                        .visible(headerToReplace.getVisible())
-                        .forceVisible(forceVisible.contains(name))
-                        .dataType(headerToReplace.getDataType())
-                        .ignoreTranslation(true))
+            .map(name ->
+                new Cell()
+                    .value(concatNotePostfixIfRequired(name))
+                    .visible(headerToReplace.getVisible())
+                    .forceVisible(forceVisible.contains(name))
+                    .dataType(headerToReplace.getDataType())
+                    .ignoreTranslation(true))
             .toList();
     headers.remove(notesInitialPosition);
     headers.addAll(notesInitialPosition, cellsToInsert);
@@ -221,16 +212,15 @@ public class NoteTableUpdater {
           var restored = noteFields[NOTE_TYPE_POS];
           if (nonNull(tenantNotePairs)
               && tenantNotePairs.stream()
-                  .anyMatch(
-                      noteWithTenant ->
-                          noteWithTenant.getTenantId().equals(noteFields[TENANT_POS])
-                              && noteWithTenant
-                                  .getNoteTypeName()
-                                  .equals(
-                                      noteFields[NOTE_TYPE_POS]
-                                          + " ("
-                                          + noteFields[TENANT_POS]
-                                          + ")"))) {
+                  .anyMatch(noteWithTenant ->
+                      noteWithTenant.getTenantId().equals(noteFields[TENANT_POS])
+                          && noteWithTenant
+                              .getNoteTypeName()
+                              .equals(
+                                  noteFields[NOTE_TYPE_POS]
+                                      + " ("
+                                      + noteFields[TENANT_POS]
+                                      + ")"))) {
             restored += " (" + noteFields[TENANT_POS] + ")";
           }
           var position = noteTypeNames.indexOf(SpecialCharacterEscaper.restore(restored));
@@ -276,12 +266,11 @@ public class NoteTableUpdater {
     if (isNull(tenantNotePairs)) {
       tenantNotePairs =
           noteTypesFromUsedTenants.stream()
-              .map(
-                  note ->
-                      new TenantNotePair()
-                          .tenantId(note.getTenantId())
-                          .noteTypeName(note.getName())
-                          .noteTypeId(note.getId()))
+              .map(note ->
+                  new TenantNotePair()
+                      .tenantId(note.getTenantId())
+                      .noteTypeName(note.getName())
+                      .noteTypeId(note.getId()))
               .toList();
       bulkOperation.setTenantNotePairs(tenantNotePairs);
       bulkOperationRepository.save(bulkOperation);

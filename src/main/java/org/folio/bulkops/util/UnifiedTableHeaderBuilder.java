@@ -33,10 +33,8 @@ public class UnifiedTableHeaderBuilder {
         Stream.concat(
                 FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
                     .map(Field::getType)
-                    .map(
-                        aclass ->
-                            FieldUtils.getFieldsListWithAnnotation(
-                                aclass, CsvCustomBindByName.class))
+                    .map(aclass ->
+                        FieldUtils.getFieldsListWithAnnotation(aclass, CsvCustomBindByName.class))
                     .flatMap(List::stream),
                 FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
             .collect(
@@ -54,10 +52,8 @@ public class UnifiedTableHeaderBuilder {
         Stream.concat(
                 FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
                     .map(Field::getType)
-                    .map(
-                        aclass ->
-                            FieldUtils.getFieldsListWithAnnotation(
-                                aclass, CsvCustomBindByName.class))
+                    .map(aclass ->
+                        FieldUtils.getFieldsListWithAnnotation(aclass, CsvCustomBindByName.class))
                     .flatMap(List::stream),
                 FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
             .collect(

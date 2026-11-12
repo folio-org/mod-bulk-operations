@@ -80,7 +80,7 @@ class ErrorServiceTest extends BaseTest {
 
   private UUID bulkOperationId;
 
-  @BeforeEach()
+  @BeforeEach
   void saveBulkOperation() {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 

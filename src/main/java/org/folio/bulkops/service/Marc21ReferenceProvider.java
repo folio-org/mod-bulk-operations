@@ -616,20 +616,18 @@ public class Marc21ReferenceProvider {
 
     var documentContext = JsonPath.parse(mappingRulesClient.getMarcBibMappingRules().toString());
 
-    noteTags.forEach(
-        tag -> {
-          instanceNoteTypes.put(tag, fetchNoteType(documentContext, tag));
-          instanceNoteSubfields.put(tag, fetchSubfields(documentContext, tag));
-          if (isStaffOnly(documentContext, tag)) {
-            staffOnlyNotes.add(tag);
-          }
-        });
+    noteTags.forEach(tag -> {
+      instanceNoteTypes.put(tag, fetchNoteType(documentContext, tag));
+      instanceNoteSubfields.put(tag, fetchSubfields(documentContext, tag));
+      if (isStaffOnly(documentContext, tag)) {
+        staffOnlyNotes.add(tag);
+      }
+    });
 
-    localNoteTags.forEach(
-        tag -> {
-          instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
-          instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
-        });
+    localNoteTags.forEach(tag -> {
+      instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
+      instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
+    });
   }
 
   private String fetchNoteType(DocumentContext context, String tag) {

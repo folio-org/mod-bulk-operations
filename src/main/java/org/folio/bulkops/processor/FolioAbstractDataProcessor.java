@@ -181,10 +181,9 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
 
   private boolean existsRuleWithStatisticalCodeAndRemoveAll(BulkOperationRuleCollection rules) {
     return rules.getBulkOperationRules().stream()
-        .anyMatch(
-            rule ->
-                rule.getRuleDetails().getOption() == STATISTICAL_CODE
-                    && rule.getRuleDetails().getActions().stream()
-                        .anyMatch(act -> act.getType() == REMOVE_ALL));
+        .anyMatch(rule ->
+            rule.getRuleDetails().getOption() == STATISTICAL_CODE
+                && rule.getRuleDetails().getActions().stream()
+                    .anyMatch(act -> act.getType() == REMOVE_ALL));
   }
 }

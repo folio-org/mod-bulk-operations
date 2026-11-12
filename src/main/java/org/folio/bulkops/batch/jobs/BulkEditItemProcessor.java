@@ -124,15 +124,9 @@ public class BulkEditItemProcessor
                 tenantResolver.getAffiliatedPermittedTenantIds(
                     EntityType.ITEM, jobExecution, identifierType, tenantIds, itemIdentifier);
 
-            affiliatedPermittedTenants.forEach(
-                tenantId ->
-                    processWithAffiliatedPermittedTenants(
-                        idType,
-                        identifier,
-                        identifierType,
-                        limit,
-                        extendedItemCollection,
-                        tenantId));
+            affiliatedPermittedTenants.forEach(tenantId ->
+                processWithAffiliatedPermittedTenants(
+                    idType, identifier, identifierType, limit, extendedItemCollection, tenantId));
             return extendedItemCollection;
           }
         }
@@ -157,16 +151,14 @@ public class BulkEditItemProcessor
         var tenantId = folioExecutionContext.getTenantId();
         var extendedItems =
             itemCollection.getItems().stream()
-                .map(
-                    item ->
-                        item.withTitle(
-                            holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
-                                item.getHoldingsRecordId(), tenantId)))
-                .map(
-                    item ->
-                        item.withHoldingsData(
-                            holdingsReferenceService.getHoldingsData(
-                                item.getHoldingsRecordId(), tenantId)))
+                .map(item ->
+                    item.withTitle(
+                        holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
+                            item.getHoldingsRecordId(), tenantId)))
+                .map(item ->
+                    item.withHoldingsData(
+                        holdingsReferenceService.getHoldingsData(
+                            item.getHoldingsRecordId(), tenantId)))
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
                 .toList();
 
@@ -223,20 +215,17 @@ public class BulkEditItemProcessor
   private List<ExtendedItem> enrichItemsWithHoldingsData(
       ItemCollection itemCollection, String tenantId) {
     return itemCollection.getItems().stream()
-        .map(
-            item ->
-                item.withTitle(
-                    holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
-                        item.getHoldingsRecordId(), tenantId)))
-        .map(
-            item ->
-                item.withHoldingsData(
-                    holdingsReferenceService.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
-        .map(
-            item -> {
-              localReferenceDataService.enrichWithTenant(item, tenantId);
-              return item.withTenantId(tenantId);
-            })
+        .map(item ->
+            item.withTitle(
+                holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
+                    item.getHoldingsRecordId(), tenantId)))
+        .map(item ->
+            item.withHoldingsData(
+                holdingsReferenceService.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
+        .map(item -> {
+          localReferenceDataService.enrichWithTenant(item, tenantId);
+          return item.withTenantId(tenantId);
+        })
         .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
         .toList();
   }

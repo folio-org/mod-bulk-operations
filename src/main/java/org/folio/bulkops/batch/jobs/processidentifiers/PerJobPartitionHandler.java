@@ -57,11 +57,10 @@ public class PerJobPartitionHandler extends AbstractPartitionHandler {
     try {
       for (StepExecution stepExecution : partitionStepExecutions) {
         FutureTask<StepExecution> task =
-            new FutureTask<>(
-                () -> {
-                  step.execute(stepExecution);
-                  return stepExecution;
-                });
+            new FutureTask<>(() -> {
+              step.execute(stepExecution);
+              return stepExecution;
+            });
         try {
           executor.execute(task);
           tasks.add(task);

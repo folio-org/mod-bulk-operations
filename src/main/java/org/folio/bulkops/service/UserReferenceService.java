@@ -106,10 +106,9 @@ public class UserReferenceService {
         .stream()
         .filter(customField -> customField.getName().equals(name))
         .findFirst()
-        .orElseThrow(
-            () ->
-                new ReferenceDataNotFoundException(
-                    format("Custom field with name=%s not found", name)));
+        .orElseThrow(() ->
+            new ReferenceDataNotFoundException(
+                format("Custom field with name=%s not found", name)));
   }
 
   @Cacheable(cacheNames = "customFields")
@@ -120,10 +119,9 @@ public class UserReferenceService {
         .stream()
         .filter(customField -> customField.getRefId().equals(refId))
         .findFirst()
-        .orElseThrow(
-            () ->
-                new ReferenceDataNotFoundException(
-                    format("Custom field with refId=%s not found", refId)));
+        .orElseThrow(() ->
+            new ReferenceDataNotFoundException(
+                format("Custom field with refId=%s not found", refId)));
   }
 
   @Cacheable(cacheNames = "moduleIds")
