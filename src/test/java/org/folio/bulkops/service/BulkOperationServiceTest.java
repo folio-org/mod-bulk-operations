@@ -457,10 +457,9 @@ class BulkOperationServiceTest extends BaseTest {
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(remoteFolioS3Client, times(3))
-                      .write(pathCaptor.capture(), streamCaptor.capture()));
+          .untilAsserted(() ->
+              verify(remoteFolioS3Client, times(3))
+                  .write(pathCaptor.capture(), streamCaptor.capture()));
 
       assertThat(
           new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
@@ -469,9 +468,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+          .untilAsserted(() ->
+              verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
@@ -667,16 +665,14 @@ class BulkOperationServiceTest extends BaseTest {
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(remoteFolioS3Client, times(1))
-                      .write(pathCaptor.capture(), streamCaptor.capture()));
+          .untilAsserted(() ->
+              verify(remoteFolioS3Client, times(1))
+                  .write(pathCaptor.capture(), streamCaptor.capture()));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
+          .untilAsserted(() ->
+              verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(2);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
@@ -695,14 +691,13 @@ class BulkOperationServiceTest extends BaseTest {
       var identifierArgumentCaptor = ArgumentCaptor.forClass(String.class);
       var errorMessageArgumentCaptor = ArgumentCaptor.forClass(String.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(errorService)
-                      .saveError(
-                          eq(bulkOperationId),
-                          identifierArgumentCaptor.capture(),
-                          errorMessageArgumentCaptor.capture(),
-                          eq(ErrorType.ERROR)));
+          .untilAsserted(() ->
+              verify(errorService)
+                  .saveError(
+                      eq(bulkOperationId),
+                      identifierArgumentCaptor.capture(),
+                      errorMessageArgumentCaptor.capture(),
+                      eq(ErrorType.ERROR)));
       Assertions.assertThat(errorMessageArgumentCaptor.getValue())
           .isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
       Assertions.assertThat(identifierArgumentCaptor.getValue())
@@ -788,9 +783,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
+          .untilAsserted(() ->
+              verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(2);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(0));
     }
@@ -870,9 +864,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(bulkOperationRepository, atLeast(6)).save(bulkOperationCaptor.capture()));
+          .untilAsserted(() ->
+              verify(bulkOperationRepository, atLeast(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
       assertThat(
@@ -1084,17 +1077,15 @@ class BulkOperationServiceTest extends BaseTest {
       var pathCaptor = ArgumentCaptor.forClass(String.class);
 
       await()
-          .untilAsserted(
-              () ->
-                  verify(remoteFolioS3Client, times(3))
-                      .write(pathCaptor.capture(), streamCaptor.capture()));
+          .untilAsserted(() ->
+              verify(remoteFolioS3Client, times(3))
+                  .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+          .untilAsserted(() ->
+              verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
 
@@ -1276,10 +1267,9 @@ class BulkOperationServiceTest extends BaseTest {
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
       await()
-          .untilAsserted(
-              () ->
-                  verify(remoteFolioS3Client, times(1))
-                      .write(pathCaptor.capture(), streamCaptor.capture()));
+          .untilAsserted(() ->
+              verify(remoteFolioS3Client, times(1))
+                  .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(
           Files.readString(Path.of(pathToModifiedUserJson)).trim(),
           new String(streamCaptor.getAllValues().getFirst().readAllBytes()));
@@ -1446,14 +1436,13 @@ class BulkOperationServiceTest extends BaseTest {
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
     await()
-        .untilAsserted(
-            () ->
-                verify(errorService, times(1))
-                    .saveError(
-                        eq(bulkOperationId),
-                        anyString(),
-                        eq(MSG_NO_CHANGE_REQUIRED),
-                        eq(ErrorType.WARNING)));
+        .untilAsserted(() ->
+            verify(errorService, times(1))
+                .saveError(
+                    eq(bulkOperationId),
+                    anyString(),
+                    eq(MSG_NO_CHANGE_REQUIRED),
+                    eq(ErrorType.WARNING)));
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     await()
@@ -1511,10 +1500,9 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(operation);
 
     await()
-        .untilAsserted(
-            () ->
-                verify(errorService, times(1))
-                    .saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
+        .untilAsserted(() ->
+            verify(errorService, times(1))
+                .saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
   }
 
   @Test
@@ -2092,7 +2080,6 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldLaunchBatchJobOnUploadStep() {
     var bulkOperationId = UUID.randomUUID();
     var filename = "file.csv";
-    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation =
         BulkOperation.builder()
             .id(bulkOperationId)
@@ -2106,6 +2093,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
     when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(1);
 
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationService.startBulkOperation(
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
@@ -2120,7 +2108,6 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldLaunchQueryJobOnUploadStep() {
     var bulkOperationId = UUID.randomUUID();
     var filename = "file.csv";
-    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation =
         BulkOperation.builder()
             .id(bulkOperationId)
@@ -2169,6 +2156,7 @@ class BulkOperationServiceTest extends BaseTest {
                 .errorMessage(DUPLICATE_ENTRY_MSG)
                 .build());
 
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationService.startBulkOperation(
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
@@ -2183,7 +2171,6 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldFailJobOnUploadStepWhenStorageFails() {
     var bulkOperationId = UUID.randomUUID();
     var filename = "file.csv";
-    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation =
         BulkOperation.builder()
             .id(bulkOperationId)
@@ -2199,6 +2186,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
     when(remoteFileSystemClient.get(filename)).thenThrow(new S3ClientException("Storage error"));
 
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationService.startBulkOperation(
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
@@ -2213,7 +2201,6 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldLaunchQueryJobOnUploadStepWhenIdIsInvalid() {
     var bulkOperationId = UUID.randomUUID();
     var filename = "file.csv";
-    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation =
         BulkOperation.builder()
             .id(bulkOperationId)
@@ -2232,6 +2219,7 @@ class BulkOperationServiceTest extends BaseTest {
             new ByteArrayInputStream(
                 ("\"xxXXXyy-zzZZZ\"\n" + "\"309df74e-5bdb-4707-b29a-3de0bd6ca3f6\"").getBytes()));
 
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationService.startBulkOperation(
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
@@ -2249,7 +2237,6 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldLaunchQueryJobOnUploadStepWhenCsvContentIsInvalid() {
     var bulkOperationId = UUID.randomUUID();
     var filename = "file.csv";
-    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation =
         BulkOperation.builder()
             .id(bulkOperationId)
@@ -2269,6 +2256,7 @@ class BulkOperationServiceTest extends BaseTest {
             new ByteArrayInputStream(
                 ("\"xxXXXyy,zzZZZ\"\n" + "\"309df74e-5bdb-4707-b29a-3de0bd6ca3f6\"").getBytes()));
 
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var result =
           bulkOperationService.startBulkOperation(
@@ -2301,10 +2289,9 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, atLeastOnce()).save(operationCaptor.capture());
     assertTrue(
         operationCaptor.getAllValues().stream()
-            .anyMatch(
-                op ->
-                    op.getErrorMessage() != null
-                        && op.getErrorMessage().toLowerCase().contains("empty")));
+            .anyMatch(op ->
+                op.getErrorMessage() != null
+                    && op.getErrorMessage().toLowerCase().contains("empty")));
   }
 
   @SneakyThrows
@@ -2609,9 +2596,10 @@ class BulkOperationServiceTest extends BaseTest {
         .thenReturn(
             new ByteArrayInputStream(
                 ("""
-                            Instance UUID,Subject
-                            "Subject headings;Subject source;Subject type
-                            modified value;-;-\"""")
+                Instance UUID,Subject
+                "Subject headings;Subject source;Subject type
+                modified value;-;-\"\
+                """)
                     .getBytes()));
     when(executionRepository.save(any(BulkOperationExecution.class)))
         .thenReturn(new BulkOperationExecution().withProcessedRecords(1));
