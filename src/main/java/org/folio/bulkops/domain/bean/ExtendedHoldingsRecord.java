@@ -54,19 +54,18 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
     entity
         .getNotes()
-        .forEach(
-            note -> {
-              var tenantNotePair =
-                  tenantNotePairs.stream()
-                      .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
-                      .findFirst();
-              if (tenantNotePair.isPresent()) {
-                note.setTenantId(tenantNotePair.get().getTenantId());
-                note.setHoldingsNoteTypeName(tenantNotePair.get().getNoteTypeName());
-              } else {
-                note.setTenantId(tenantId);
-              }
-            });
+        .forEach(note -> {
+          var tenantNotePair =
+              tenantNotePairs.stream()
+                  .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
+                  .findFirst();
+          if (tenantNotePair.isPresent()) {
+            note.setTenantId(tenantNotePair.get().getTenantId());
+            note.setHoldingsNoteTypeName(tenantNotePair.get().getNoteTypeName());
+          } else {
+            note.setTenantId(tenantId);
+          }
+        });
   }
 
   @Override

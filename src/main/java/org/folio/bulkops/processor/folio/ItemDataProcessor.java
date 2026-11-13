@@ -143,13 +143,11 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
     }
     return itemsNotesUpdater
         .updateNotes(action, option)
-        .orElseGet(
-            () ->
-                item -> {
-                  throw new BulkOperationException(
-                      format(
-                          "Combination %s and %s isn't supported yet", option, action.getType()));
-                });
+        .orElseGet(() ->
+            item -> {
+              throw new BulkOperationException(
+                  format("Combination %s and %s isn't supported yet", option, action.getType()));
+            });
   }
 
   @Override

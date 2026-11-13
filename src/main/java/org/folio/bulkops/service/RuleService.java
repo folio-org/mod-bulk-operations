@@ -38,31 +38,29 @@ public class RuleService {
 
     ruleCollection
         .getBulkOperationRules()
-        .forEach(
-            bulkOperationRule -> {
-              var rule =
-                  ruleRepository.save(
-                      org.folio.bulkops.domain.entity.BulkOperationRule.builder()
-                          .bulkOperationId(bulkOperationRule.getBulkOperationId())
-                          .updateOption(bulkOperationRule.getRuleDetails().getOption())
-                          .build());
-              bulkOperationRule
-                  .getRuleDetails()
-                  .getActions()
-                  .forEach(
-                      action ->
-                          ruleDetailsRepository.save(
-                              org.folio.bulkops.domain.entity.BulkOperationRuleDetails.builder()
-                                  .ruleId(rule.getId())
-                                  .updateAction(action.getType())
-                                  .initialValue(action.getInitial())
-                                  .updatedValue(action.getUpdated())
-                                  .parameters(action.getParameters())
-                                  .ruleTenants(bulkOperationRule.getRuleDetails().getTenants())
-                                  .actionTenants(action.getTenants())
-                                  .updatedTenants(action.getUpdatedTenants())
-                                  .build()));
-            });
+        .forEach(bulkOperationRule -> {
+          var rule =
+              ruleRepository.save(
+                  org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+                      .bulkOperationId(bulkOperationRule.getBulkOperationId())
+                      .updateOption(bulkOperationRule.getRuleDetails().getOption())
+                      .build());
+          bulkOperationRule
+              .getRuleDetails()
+              .getActions()
+              .forEach(action ->
+                  ruleDetailsRepository.save(
+                      org.folio.bulkops.domain.entity.BulkOperationRuleDetails.builder()
+                          .ruleId(rule.getId())
+                          .updateAction(action.getType())
+                          .initialValue(action.getInitial())
+                          .updatedValue(action.getUpdated())
+                          .parameters(action.getParameters())
+                          .ruleTenants(bulkOperationRule.getRuleDetails().getTenants())
+                          .actionTenants(action.getTenants())
+                          .updatedTenants(action.getUpdatedTenants())
+                          .build()));
+        });
     saveMarcRuleIfSetToDelete(bulkOperation, ruleCollection);
     return ruleCollection;
   }
@@ -71,28 +69,26 @@ public class RuleService {
       BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
     ruleCollection
         .getBulkOperationRules()
-        .forEach(
-            rule -> {
-              if (rule.getRuleDetails().getOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
-                rule.getRuleDetails()
-                    .getActions()
-                    .forEach(
-                        action -> {
-                          var marcRules = new BulkOperationMarcRuleCollection();
-                          var marcRule =
-                              new org.folio.bulkops.domain.dto.BulkOperationMarcRule()
-                                  .bulkOperationId(rule.getBulkOperationId())
-                                  .actions(List.of(new MarcAction().name(action.getType())))
-                                  .tag(LEADER_TAG)
-                                  .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
-                          marcRules.addBulkOperationMarcRulesItem(marcRule);
-                          marcRules.totalRecords(1);
-                          RuleService selfProxy = applicationContext.getBean(RuleService.class);
-                          // Proxy is used, transactional behavior works.
-                          selfProxy.saveMarcRules(bulkOperation, marcRules);
-                        });
-              }
-            });
+        .forEach(rule -> {
+          if (rule.getRuleDetails().getOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
+            rule.getRuleDetails()
+                .getActions()
+                .forEach(action -> {
+                  var marcRules = new BulkOperationMarcRuleCollection();
+                  var marcRule =
+                      new org.folio.bulkops.domain.dto.BulkOperationMarcRule()
+                          .bulkOperationId(rule.getBulkOperationId())
+                          .actions(List.of(new MarcAction().name(action.getType())))
+                          .tag(LEADER_TAG)
+                          .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
+                  marcRules.addBulkOperationMarcRulesItem(marcRule);
+                  marcRules.totalRecords(1);
+                  RuleService selfProxy = applicationContext.getBean(RuleService.class);
+                  // Proxy is used, transactional behavior works.
+                  selfProxy.saveMarcRules(bulkOperation, marcRules);
+                });
+          }
+        });
   }
 
   public BulkOperationRuleCollection getRules(UUID bulkOperationId) {
@@ -112,15 +108,14 @@ public class RuleService {
                 .option(entity.getUpdateOption())
                 .actions(
                     entity.getRuleDetails().stream()
-                        .map(
-                            details ->
-                                new Action()
-                                    .type(details.getUpdateAction())
-                                    .initial(details.getInitialValue())
-                                    .updated(details.getUpdatedValue())
-                                    .parameters(details.getParameters())
-                                    .tenants(details.getActionTenants())
-                                    .updatedTenants(details.getUpdatedTenants()))
+                        .map(details ->
+                            new Action()
+                                .type(details.getUpdateAction())
+                                .initial(details.getInitialValue())
+                                .updated(details.getUpdatedValue())
+                                .parameters(details.getParameters())
+                                .tenants(details.getActionTenants())
+                                .updatedTenants(details.getUpdatedTenants()))
                         .toList())
                 .tenants(entity.getRuleDetails().getFirst().getRuleTenants()));
   }

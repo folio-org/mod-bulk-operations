@@ -207,15 +207,14 @@ class MetadataProviderServiceTest extends BaseTest {
               .build();
       when(metadataProviderClient.getJobLogEntries(
               eq(dataImportJobId.toString()), anyLong(), anyLong()))
-          .thenAnswer(
-              invocation -> {
-                var offset = (Long) invocation.getArguments()[1];
-                return switch (offset.intValue()) {
-                  case 0, 3, 6 -> threeEntriesCollection;
-                  case 9 -> singleEntryCollection;
-                  default -> throw new IllegalStateException("Unexpected value: " + offset);
-                };
-              });
+          .thenAnswer(invocation -> {
+            var offset = (Long) invocation.getArguments()[1];
+            return switch (offset.intValue()) {
+              case 0, 3, 6 -> threeEntriesCollection;
+              case 9 -> singleEntryCollection;
+              default -> throw new IllegalStateException("Unexpected value: " + offset);
+            };
+          });
       var executions =
           Collections.singletonList(
               new DataImportJobExecution()
@@ -272,16 +271,15 @@ class MetadataProviderServiceTest extends BaseTest {
               .build();
       when(metadataProviderClient.getJobLogEntries(
               eq(dataImportJobId.toString()), anyLong(), anyLong()))
-          .thenAnswer(
-              invocation -> {
-                var offset = (Long) invocation.getArguments()[1];
-                return switch (offset.intValue()) {
-                  case 0, 6 -> threeEntriesCollection;
-                  case 3 -> throw new NotFoundException("Log entries were not found");
-                  case 9 -> singleEntryCollection;
-                  default -> throw new IllegalStateException("Unexpected offset value: " + offset);
-                };
-              });
+          .thenAnswer(invocation -> {
+            var offset = (Long) invocation.getArguments()[1];
+            return switch (offset.intValue()) {
+              case 0, 6 -> threeEntriesCollection;
+              case 3 -> throw new NotFoundException("Log entries were not found");
+              case 9 -> singleEntryCollection;
+              default -> throw new IllegalStateException("Unexpected offset value: " + offset);
+            };
+          });
 
       var executions =
           Collections.singletonList(

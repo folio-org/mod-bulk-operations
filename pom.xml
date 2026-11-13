@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.6</version>
+    <version>4.1.1</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -34,37 +34,29 @@
     <argLine />
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
 
-    <folio-spring-base.version>10.0.0</folio-spring-base.version>
-    <folio-spring-cql.version>9.1.0</folio-spring-cql.version>
-    <folio-service-tools.version>6.0.0</folio-service-tools.version>
+    <folio-spring-base.version>10.0.1</folio-spring-base.version>
+    <folio-service-tools.version>6.0.1</folio-service-tools.version>
+    <folio-query-tool-metadata.version>4.0.0</folio-query-tool-metadata.version>
+    <folio-s3-client.version>3.0.2</folio-s3-client.version>
+    <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
+    <spring-cloud-starter-loadbalancer.version>5.0.4</spring-cloud-starter-loadbalancer.version>
     <mapstruct.version>1.6.3</mapstruct.version>
-    <apache-commons-io.version>2.20.0</apache-commons-io.version>
-    <apache-commons-collections.version>4.5.0</apache-commons-collections.version>
+    <apache-commons-io.version>2.22.0</apache-commons-io.version>
+    <apache-commons-collections.version>4.6.0</apache-commons-collections.version>
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
     <hibernate-types-60.version>2.21.1</hibernate-types-60.version>
-    <folio-s3-client.version>3.0.0</folio-s3-client.version>
-    <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <folio-query-tool-metadata.version>4.0.0</folio-query-tool-metadata.version>
-    <marc4j.version>2.9.2</marc4j.version>
-    <jsonPath.version>3.0.0</jsonPath.version>
+    <marc4j.version>2.9.8</marc4j.version>
 
     <!-- Test dependencies versions -->
-    <testcontainer.version>2.0.3</testcontainer.version>
-    <wiremock.version>2.35.2</wiremock.version>
-    <awaitility.version>4.3.0</awaitility.version>
+    <wiremock-standalone.version>3.13.2</wiremock-standalone.version>
 
     <!-- Plugins versions -->
-    <maven-openapi-generator-plugin.version>7.15.0</maven-openapi-generator-plugin.version>
+    <maven-openapi-generator-plugin.version>7.27.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
-    <maven-build-helper-plugin.version>3.6.1</maven-build-helper-plugin.version>
-    <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
-    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <maven-spotless-plugin.version>3.1.0</maven-spotless-plugin.version>
+    <checkstyle.version>14.4.0</checkstyle.version>
+    <maven-spotless-plugin.version>3.11.0</maven-spotless-plugin.version>
   </properties>
 
   <dependencies>
@@ -89,7 +81,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-cql</artifactId>
-      <version>${folio-spring-cql.version}</version>
+      <version>${folio-spring-base.version}</version>
     </dependency>
 
     <dependency>
@@ -146,7 +138,6 @@
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
-      <version>${spring-kafka.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
@@ -177,7 +168,7 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-      <version>5.0.1</version>
+      <version>${spring-cloud-starter-loadbalancer.version}</version>
       <scope>compile</scope>
     </dependency>
 
@@ -252,7 +243,6 @@
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
-      <version>${jsonPath.version}</version>
     </dependency>
 
     <!-- Test dependencies -->
@@ -279,49 +269,43 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc-test</artifactId>
-      <version>4.0.2</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
-      <version>${testcontainer.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>1.21.4</version>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>kafka</artifactId>
-      <version>1.21.4</version>
+      <artifactId>testcontainers-kafka</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>1.21.4</version>
+      <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <version>${awaitility.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock-jre8-standalone</artifactId>
-      <version>${wiremock.version}</version>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>${wiremock-standalone.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -354,12 +338,10 @@
       <artifactId>spring-batch-test</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
     <plugins>
-
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -379,7 +361,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.19.0</version>
         <configuration>
           <generateBackupPoms>false</generateBackupPoms>
         </configuration>
@@ -388,7 +369,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>${maven-build-helper-plugin.version}</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -453,7 +433,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <release>${java.version}</release>
           <annotationProcessorPaths>
@@ -484,7 +463,6 @@
 
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>${maven-resources-plugin.version}</version>
         <executions>
           <execution>
             <id>filter-descriptor-inputs</id>
@@ -540,7 +518,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
           <includes>
@@ -552,7 +529,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>${maven-release-plugin.version}</version>
         <configuration>
           <preparationGoals>clean verify</preparationGoals>
           <tagNameFormat>v@{project.version}</tagNameFormat>
@@ -564,7 +540,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven-failsafe-plugin.version}</version>
         <configuration>
           <groups>integration</groups>
         </configuration>
@@ -605,7 +580,6 @@
         </executions>
       </plugin>
 
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -614,7 +588,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>11.0.1</version>
+            <version>${checkstyle.version}</version>
           </dependency>
         </dependencies>
         <executions>
@@ -641,7 +615,6 @@
           <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 

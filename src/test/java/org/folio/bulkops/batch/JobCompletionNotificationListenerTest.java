@@ -93,10 +93,9 @@ class JobCompletionNotificationListenerTest {
 
     verify(bulkOperationRepository)
         .save(
-            argThat(
-                op ->
-                    op.getStatus() == OperationStatusType.COMPLETED_WITH_ERRORS
-                        && op.getEndTime() != null));
+            argThat(op ->
+                op.getStatus() == OperationStatusType.COMPLETED_WITH_ERRORS
+                    && op.getEndTime() != null));
   }
 
   @Test
@@ -109,11 +108,10 @@ class JobCompletionNotificationListenerTest {
 
     verify(bulkOperationRepository)
         .save(
-            argThat(
-                op ->
-                    op.getStatus() == OperationStatusType.FAILED
-                        && op.getErrorMessage().contains("fail")
-                        && op.getEndTime() != null));
+            argThat(op ->
+                op.getStatus() == OperationStatusType.FAILED
+                    && op.getErrorMessage().contains("fail")
+                    && op.getEndTime() != null));
   }
 
   @Test
@@ -197,9 +195,8 @@ class JobCompletionNotificationListenerTest {
 
     verify(bulkOperationRepository, atLeastOnce())
         .save(
-            argThat(
-                op ->
-                    op.getStatus() == OperationStatusType.FAILED
-                        && op.getErrorMessage().contains("Error getting tenants list")));
+            argThat(op ->
+                op.getStatus() == OperationStatusType.FAILED
+                    && op.getErrorMessage().contains("Error getting tenants list")));
   }
 }

@@ -64,10 +64,9 @@ class TenantResolverTest {
     when(readPermissionsValidator.isBulkEditReadPermissionExists(currentTenant, entityType))
         .thenReturn(true);
     var identifier = UUID.randomUUID().toString();
-    assertDoesNotThrow(
-        () ->
-            tenantResolver.checkAffiliatedPermittedTenantIds(
-                entityType, identifierType.getValue(), Set.of(currentTenant), identifier));
+    assertDoesNotThrow(() ->
+        tenantResolver.checkAffiliatedPermittedTenantIds(
+            entityType, identifierType.getValue(), Set.of(currentTenant), identifier));
   }
 
   @ParameterizedTest
@@ -201,18 +200,16 @@ class TenantResolverTest {
   private static Stream<Arguments> supportedEntityTypesAndIdentifierTypes() {
     return Arrays.stream(EntityType.values())
         .filter(type -> type == EntityType.ITEM || type == EntityType.HOLDINGS_RECORD)
-        .flatMap(
-            entityType ->
-                Arrays.stream(IdentifierType.values())
-                    .map(identifierType -> Arguments.of(entityType, identifierType)));
+        .flatMap(entityType ->
+            Arrays.stream(IdentifierType.values())
+                .map(identifierType -> Arguments.of(entityType, identifierType)));
   }
 
   private static Stream<Arguments> unsupportedEntityTypesAndIdentifierTypes() {
     return Arrays.stream(EntityType.values())
         .filter(type -> type != EntityType.ITEM && type != EntityType.HOLDINGS_RECORD)
-        .flatMap(
-            entityType ->
-                Arrays.stream(IdentifierType.values())
-                    .map(identifierType -> Arguments.of(entityType, identifierType)));
+        .flatMap(entityType ->
+            Arrays.stream(IdentifierType.values())
+                .map(identifierType -> Arguments.of(entityType, identifierType)));
   }
 }

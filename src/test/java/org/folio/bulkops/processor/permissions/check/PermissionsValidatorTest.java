@@ -85,10 +85,9 @@ class PermissionsValidatorTest {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(requiredPermissionResolver.getWritePermission(any(EntityType.class))).thenCallRealMethod();
 
-    assertDoesNotThrow(
-        () ->
-            permissionsValidator.checkIfBulkEditWritePermissionExists(
-                "tenant1", EntityType.ITEM, "errorMessage"));
+    assertDoesNotThrow(() ->
+        permissionsValidator.checkIfBulkEditWritePermissionExists(
+            "tenant1", EntityType.ITEM, "errorMessage"));
     assertThrows(
         WritePermissionDoesNotExist.class,
         () ->
@@ -109,10 +108,9 @@ class PermissionsValidatorTest {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(requiredPermissionResolver.getWritePermission(any(EntityType.class))).thenCallRealMethod();
 
-    assertDoesNotThrow(
-        () ->
-            permissionsValidator.checkIfBulkEditWritePermissionExists(
-                "tenant1", EntityType.USER, "errorMessage"));
+    assertDoesNotThrow(() ->
+        permissionsValidator.checkIfBulkEditWritePermissionExists(
+            "tenant1", EntityType.USER, "errorMessage"));
     assertThrows(
         WritePermissionDoesNotExist.class,
         () ->

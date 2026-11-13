@@ -696,9 +696,8 @@ public class BulkOperationService {
     BulkOperation operation =
         bulkOperationRepository
             .findById(bulkOperationId)
-            .orElseThrow(
-                () ->
-                    new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
+            .orElseThrow(() ->
+                new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xokapiUserId);
 
     if (UPLOAD == step) {
@@ -714,39 +713,37 @@ public class BulkOperationService {
               Collections.synchronizedList(new ArrayList<>());
           reader
               .lines()
-              .forEach(
-                  id -> {
-                    if (id.contains(COMMA_DELIMETER)) {
-                      throw new IllegalArgumentException(INCORRECT_NUMBER_OF_TOKENS);
-                    }
-                    try {
-                      id = removeStart(removeEnd(id, "\""), "\"");
-                      if (!ids.add(UUID.fromString(id))) {
-                        bulkOperationExecutionContents.add(
-                            BulkOperationExecutionContent.builder()
-                                .identifier(id)
-                                .bulkOperationId(operation.getId())
-                                .state(StateType.FAILED)
-                                .errorType(ErrorType.WARNING)
-                                .errorMessage(DUPLICATE_ENTRY_MSG)
-                                .build());
-                        operation.setProcessedNumOfRecords(
-                            operation.getProcessedNumOfRecords() + 1);
-                      }
-                      ids.add(UUID.fromString(id));
-                    } catch (Exception e) {
-                      // saving invalid UUID identifiers as "No match found"
-                      bulkOperationExecutionContents.add(
-                          BulkOperationExecutionContent.builder()
-                              .identifier(id)
-                              .bulkOperationId(operation.getId())
-                              .state(StateType.FAILED)
-                              .errorType(ErrorType.ERROR)
-                              .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                              .build());
-                      operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
-                    }
-                  });
+              .forEach(id -> {
+                if (id.contains(COMMA_DELIMETER)) {
+                  throw new IllegalArgumentException(INCORRECT_NUMBER_OF_TOKENS);
+                }
+                try {
+                  id = removeStart(removeEnd(id, "\""), "\"");
+                  if (!ids.add(UUID.fromString(id))) {
+                    bulkOperationExecutionContents.add(
+                        BulkOperationExecutionContent.builder()
+                            .identifier(id)
+                            .bulkOperationId(operation.getId())
+                            .state(StateType.FAILED)
+                            .errorType(ErrorType.WARNING)
+                            .errorMessage(DUPLICATE_ENTRY_MSG)
+                            .build());
+                    operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
+                  }
+                  ids.add(UUID.fromString(id));
+                } catch (Exception e) {
+                  // saving invalid UUID identifiers as "No match found"
+                  bulkOperationExecutionContents.add(
+                      BulkOperationExecutionContent.builder()
+                          .identifier(id)
+                          .bulkOperationId(operation.getId())
+                          .state(StateType.FAILED)
+                          .errorType(ErrorType.ERROR)
+                          .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                          .build());
+                  operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
+                }
+              });
 
           queryService.retrieveRecordsIdentifiersFlowAsync(
               ids.stream().toList(), operation, bulkOperationExecutionContents);
@@ -767,22 +764,21 @@ public class BulkOperationService {
         bulkOperationRepository.save(operation);
 
         executor.execute(
-            getRunnableWithCurrentFolioContext(
-                () -> {
-                  try {
-                    log.info("Launching batch job");
-                    var jobLaunchRequest =
-                        new JobLaunchRequest(
-                            getBatchJob(operation), prepareJobParameters(operation, numOfLines));
-                    exportJobManagerSync.launchJob(jobLaunchRequest);
-                  } catch (JobExecutionException e) {
-                    log.error(ERROR_STARTING_BULK_OPERATION, e);
-                    operation.setStatus(FAILED);
-                    operation.setErrorMessage(e.getMessage());
-                    operation.setEndTime(LocalDateTime.now());
-                    bulkOperationRepository.save(operation);
-                  }
-                }));
+            getRunnableWithCurrentFolioContext(() -> {
+              try {
+                log.info("Launching batch job");
+                var jobLaunchRequest =
+                    new JobLaunchRequest(
+                        getBatchJob(operation), prepareJobParameters(operation, numOfLines));
+                exportJobManagerSync.launchJob(jobLaunchRequest);
+              } catch (JobExecutionException e) {
+                log.error(ERROR_STARTING_BULK_OPERATION, e);
+                operation.setStatus(FAILED);
+                operation.setErrorMessage(e.getMessage());
+                operation.setEndTime(LocalDateTime.now());
+                bulkOperationRepository.save(operation);
+              }
+            }));
 
         return operation;
       }
@@ -870,25 +866,22 @@ public class BulkOperationService {
       }
       csvToBean
           .getCapturedExceptions()
-          .forEach(
-              e ->
-                  errorService.saveError(
-                      operation.getId(),
-                      Utils.getIdentifierForManualApproach(
-                          e.getLine(), operation.getIdentifierType()),
-                      e.getMessage(),
-                      ErrorType.ERROR));
+          .forEach(e ->
+              errorService.saveError(
+                  operation.getId(),
+                  Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()),
+                  e.getMessage(),
+                  ErrorType.ERROR));
       csvToBean.getCapturedExceptions().clear();
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
       bulkOperationRepository
           .findById(operation.getId())
-          .ifPresent(
-              op -> {
-                operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors());
-                operation.setCommittedNumOfWarnings(op.getCommittedNumOfWarnings());
-              });
+          .ifPresent(op -> {
+            operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors());
+            operation.setCommittedNumOfWarnings(op.getCommittedNumOfWarnings());
+          });
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
 
@@ -948,14 +941,12 @@ public class BulkOperationService {
     updateBulkOperationBasedOnDataImportState(executions, bulkOperation);
     if (metadataProviderService.isDataImportJobCompleted(executions)) {
       executor.execute(
-          getRunnableWithCurrentFolioContext(
-              () -> {
-                var logEntries =
-                    metadataProviderService.getJobLogEntries(bulkOperation, executions);
-                errorService.saveErrorsFromDataImport(logEntries, bulkOperation);
-                var updatedIds = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
-                srsService.retrieveMarcInstancesFromSrs(updatedIds, bulkOperation);
-              }));
+          getRunnableWithCurrentFolioContext(() -> {
+            var logEntries = metadataProviderService.getJobLogEntries(bulkOperation, executions);
+            errorService.saveErrorsFromDataImport(logEntries, bulkOperation);
+            var updatedIds = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
+            srsService.retrieveMarcInstancesFromSrs(updatedIds, bulkOperation);
+          }));
     }
   }
 
@@ -1075,34 +1066,31 @@ public class BulkOperationService {
   private synchronized void handleProcessingCompletion(UUID operationId) {
     bulkOperationRepository
         .findById(operationId)
-        .ifPresent(
-            operation -> {
-              if (DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
-                var processingList =
-                    dataProcessingRepository.findAllByBulkOperationId(operation.getId());
-                if (isCompletedSuccessfully(processingList)) {
-                  var processedNumOfRecords =
-                      processingList.stream()
-                          .map(BulkOperationDataProcessing::getProcessedNumOfRecords)
-                          .mapToInt(v -> v)
-                          .max()
-                          .orElseThrow(
-                              () ->
-                                  new IllegalStateException(
-                                      "Failed to get processed num of records"));
-                  operation.setApproach(IN_APP);
-                  operation.setStatus(OperationStatusType.REVIEW_CHANGES);
-                  operation.setProcessedNumOfRecords(processedNumOfRecords);
-                  bulkOperationRepository.save(operation);
-                  log.info(
-                      "Bulk operation id={} confirm processing completed successfully",
-                      operation.getId());
-                }
-              } else if (FAILED.equals(operation.getStatus())) {
-                log.info("Bulk operation id={} failed, clearing modified files", operation.getId());
-                logFilesService.removeModifiedFiles(operation);
-              }
-            });
+        .ifPresent(operation -> {
+          if (DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
+            var processingList =
+                dataProcessingRepository.findAllByBulkOperationId(operation.getId());
+            if (isCompletedSuccessfully(processingList)) {
+              var processedNumOfRecords =
+                  processingList.stream()
+                      .map(BulkOperationDataProcessing::getProcessedNumOfRecords)
+                      .mapToInt(v -> v)
+                      .max()
+                      .orElseThrow(() ->
+                          new IllegalStateException("Failed to get processed num of records"));
+              operation.setApproach(IN_APP);
+              operation.setStatus(OperationStatusType.REVIEW_CHANGES);
+              operation.setProcessedNumOfRecords(processedNumOfRecords);
+              bulkOperationRepository.save(operation);
+              log.info(
+                  "Bulk operation id={} confirm processing completed successfully",
+                  operation.getId());
+            }
+          } else if (FAILED.equals(operation.getStatus())) {
+            log.info("Bulk operation id={} failed, clearing modified files", operation.getId());
+            logFilesService.removeModifiedFiles(operation);
+          }
+        });
   }
 
   private synchronized void saveLinks(BulkOperation source) {

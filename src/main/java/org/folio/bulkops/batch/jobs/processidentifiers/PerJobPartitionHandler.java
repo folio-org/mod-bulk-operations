@@ -28,11 +28,10 @@ public class PerJobPartitionHandler extends AbstractPartitionHandler {
   /**
    * Creates a new handler for the given worker step.
    *
-   * @param step           the worker step to execute for each partition
-   * @param gridAndThreadPoolSize       maximum number of partitions (passed to
-   *                                    {@link AbstractPartitionHandler}) and size of the per-job
-   *                                    thread pool (in this case should equal {@code gridSize}
-   *                                    so all partitions can run concurrently)
+   * @param step the worker step to execute for each partition
+   * @param gridAndThreadPoolSize maximum number of partitions (passed to {@link
+   *     AbstractPartitionHandler}) and size of the per-job thread pool (in this case should equal
+   *     {@code gridSize} so all partitions can run concurrently)
    */
   public PerJobPartitionHandler(Step step, int gridAndThreadPoolSize) {
     this.step = step;
@@ -58,11 +57,10 @@ public class PerJobPartitionHandler extends AbstractPartitionHandler {
     try {
       for (StepExecution stepExecution : partitionStepExecutions) {
         FutureTask<StepExecution> task =
-            new FutureTask<>(
-                () -> {
-                  step.execute(stepExecution);
-                  return stepExecution;
-                });
+            new FutureTask<>(() -> {
+              step.execute(stepExecution);
+              return stepExecution;
+            });
         try {
           executor.execute(task);
           tasks.add(task);

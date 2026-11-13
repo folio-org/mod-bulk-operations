@@ -31,7 +31,7 @@ class LogFilesServiceTest extends BaseTest {
   private UUID oldBulkOperationId;
   private UUID nonOldBulkOperationId;
 
-  @BeforeEach()
+  @BeforeEach
   void saveBulkOperation() {
     var back31days = LocalDateTime.now().minusDays(31);
     var back29days = LocalDateTime.now().minusDays(29);

@@ -145,12 +145,11 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
           extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
     }
     var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
-    return notesUpdaterOptional.orElseGet(
-        () ->
-            holding -> {
-              throw new BulkOperationException(
-                  format("Combination %s and %s isn't supported yet", option, action.getType()));
-            });
+    return notesUpdaterOptional.orElseGet(() ->
+        holding -> {
+          throw new BulkOperationException(
+              format("Combination %s and %s isn't supported yet", option, action.getType()));
+        });
   }
 
   private void validateReplacement(UpdateOptionType option, Action action)

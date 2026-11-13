@@ -1449,10 +1449,9 @@ class ItemDataProcessorTest extends BaseTest {
               .count());
       var duplicated =
           item.getCirculationNotes().stream()
-              .filter(
-                  circNote ->
-                      circNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT
-                          && StringUtils.equals(circNote.getNote(), "note 1"))
+              .filter(circNote ->
+                  circNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT
+                      && StringUtils.equals(circNote.getNote(), "note 1"))
               .findFirst();
       assertTrue(duplicated.isPresent());
       assertTrue(duplicated.get().getStaffOnly());
@@ -1473,19 +1472,17 @@ class ItemDataProcessorTest extends BaseTest {
 
       long count =
           item.getCirculationNotes().stream()
-              .filter(
-                  circNote ->
-                      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN
-                          && StringUtils.equals(circNote.getNote(), "note 1"))
+              .filter(circNote ->
+                  circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN
+                      && StringUtils.equals(circNote.getNote(), "note 1"))
               .count();
       assertEquals(2, count);
 
       duplicated =
           item.getCirculationNotes().stream()
-              .filter(
-                  circNote ->
-                      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN
-                          && StringUtils.equals(circNote.getNote(), "note 2"))
+              .filter(circNote ->
+                  circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN
+                      && StringUtils.equals(circNote.getNote(), "note 2"))
               .findFirst();
       assertTrue(duplicated.isPresent());
       assertTrue(duplicated.get().getStaffOnly());

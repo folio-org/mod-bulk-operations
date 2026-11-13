@@ -207,21 +207,20 @@ public class FqmContentFetcher {
               isCentralTenant,
               bulkOperationExecutionContents);
 
-      completion.submit(
-          () -> {
-            ContentsRequest req =
-                new ContentsRequest()
-                    .entityTypeId(entityTypeId)
-                    .fields(entityJsonKeys)
-                    .ids(
-                        chunk.stream()
-                            .map(UUID::toString)
-                            .map(idMapper)
-                            .filter(CollectionUtils::isNotEmpty)
-                            .toList());
+      completion.submit(() -> {
+        ContentsRequest req =
+            new ContentsRequest()
+                .entityTypeId(entityTypeId)
+                .fields(entityJsonKeys)
+                .ids(
+                    chunk.stream()
+                        .map(UUID::toString)
+                        .map(idMapper)
+                        .filter(CollectionUtils::isNotEmpty)
+                        .toList());
 
-            return queryClient.getContents(req);
-          });
+        return queryClient.getContents(req);
+      });
     }
 
     return pipeStreamingResponse(
@@ -252,26 +251,23 @@ public class FqmContentFetcher {
         chunk.stream()
             .map(UUID::toString)
             .filter(id -> !idTenantMap.containsKey(id))
-            .forEach(
-                missingId -> {
-                  addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId);
-                  bulkOperation.setProcessedNumOfRecords(
-                      bulkOperation.getProcessedNumOfRecords() + 1);
-                });
+            .forEach(missingId -> {
+              addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId);
+              bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
+            });
 
         // Save duplicates across tenants errors for IDs that are present in more than one tenant
         idTenantMap
             .entrySet()
-            .removeIf(
-                e -> {
-                  if (e.getValue().size() > 1) {
-                    saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-                    bulkOperation.setProcessedNumOfRecords(
-                      bulkOperation.getProcessedNumOfRecords() + 1);
-                    return true;
-                  }
-                  return false;
-                });
+            .removeIf(e -> {
+              if (e.getValue().size() > 1) {
+                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                bulkOperation.setProcessedNumOfRecords(
+                    bulkOperation.getProcessedNumOfRecords() + 1);
+                return true;
+              }
+              return false;
+            });
 
         return id ->
             idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
@@ -345,32 +341,31 @@ public class FqmContentFetcher {
     final AtomicReference<Throwable> error = new AtomicReference<>(null);
 
     var writer =
-        new Thread(
-            () -> {
-              try (BufferedWriter bw =
-                  new BufferedWriter(
-                      new OutputStreamWriter(pos, StandardCharsets.UTF_8), BUFFER_SIZE)) {
+        new Thread(() -> {
+          try (BufferedWriter bw =
+              new BufferedWriter(
+                  new OutputStreamWriter(pos, StandardCharsets.UTF_8), BUFFER_SIZE)) {
 
-                for (int i = 0; i < submittedTasks; i++) {
-                  List<Map<String, Object>> part = next(completion, error, executor);
+            for (int i = 0; i < submittedTasks; i++) {
+              List<Map<String, Object>> part = next(completion, error, executor);
 
-                  if (part == null || part.isEmpty()) {
-                    continue;
-                  }
-                  part(bulkOperation, bw, part, bulkOperationExecutionContents, isCentralTenant);
-                }
-
-              } catch (InterruptedException ie) {
-                log.error("Error streaming FQM response", ie);
-                fail(error, executor, ie, true);
-              } catch (Exception ex) {
-                log.error("Error streaming FQM response", ex);
-                fail(error, executor, ex, false);
-              } finally {
-                closeQuietly(pos);
-                executor.shutdownNow();
+              if (part == null || part.isEmpty()) {
+                continue;
               }
-            });
+              part(bulkOperation, bw, part, bulkOperationExecutionContents, isCentralTenant);
+            }
+
+          } catch (InterruptedException ie) {
+            log.error("Error streaming FQM response", ie);
+            fail(error, executor, ie, true);
+          } catch (Exception ex) {
+            log.error("Error streaming FQM response", ex);
+            fail(error, executor, ex, false);
+          } finally {
+            closeQuietly(pos);
+            executor.shutdownNow();
+          }
+        });
 
     writer.setDaemon(true);
     writer.start();
@@ -501,17 +496,16 @@ public class FqmContentFetcher {
 
       List<CompletableFuture<InputStream>> tasks =
           IntStream.range(0, chunks)
-              .mapToObj(
-                  chunk ->
-                      CompletableFuture.supplyAsync(
-                          () ->
-                              task(
-                                  bulkOperation,
-                                  chunk,
-                                  total,
-                                  bulkOperationExecutionContents,
-                                  isCentralTenant),
-                          executor))
+              .mapToObj(chunk ->
+                  CompletableFuture.supplyAsync(
+                      () ->
+                          task(
+                              bulkOperation,
+                              chunk,
+                              total,
+                              bulkOperationExecutionContents,
+                              isCentralTenant),
+                      executor))
               .toList();
 
       CompletableFuture<List<InputStream>> future =
@@ -548,10 +542,9 @@ public class FqmContentFetcher {
       List<Map<String, Object>> response) {
     return new ByteArrayInputStream(
         response.stream()
-            .map(
-                json ->
-                    processFqmJson(
-                        bulkOperation, bulkOperationExecutionContents, isCentralTenant, json))
+            .map(json ->
+                processFqmJson(
+                    bulkOperation, bulkOperationExecutionContents, isCentralTenant, json))
             .filter(StringUtils::isNotEmpty)
             .collect(Collectors.joining(LINE_BREAK))
             .getBytes(StandardCharsets.UTF_8));

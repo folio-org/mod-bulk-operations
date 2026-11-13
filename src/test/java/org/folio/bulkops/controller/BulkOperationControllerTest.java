@@ -110,20 +110,20 @@ class BulkOperationControllerTest extends BaseTest {
             .build();
     var content =
         """
-            {
-               "bulkOperationRules" : [ {
-                 "id" : "27749ff8-bffd-4344-853c-bc765c504631",
-                 "bulkOperationId": "1910fae2-08c7-46e8-a73b-fc35d2639734",
-                 "rule_details": {
-                   "option": "ITEM_NOTE",
-                   "actions": [ {
-                     "type": "ADD_TO_EXISTING"
-                   } ]
-                 }
-               } ],
-               "totalRecords" : 1
+        {
+           "bulkOperationRules" : [ {
+             "id" : "27749ff8-bffd-4344-853c-bc765c504631",
+             "bulkOperationId": "1910fae2-08c7-46e8-a73b-fc35d2639734",
+             "rule_details": {
+               "option": "ITEM_NOTE",
+               "actions": [ {
+                 "type": "ADD_TO_EXISTING"
+               } ]
              }
-            """;
+           } ],
+           "totalRecords" : 1
+         }
+        """;
     when(bulkOperationService.getBulkOperationOrThrow(bulkOperation.getId()))
         .thenReturn(bulkOperation);
     when(ruleService.saveRules(eq(bulkOperation), any(BulkOperationRuleCollection.class)))
@@ -224,7 +224,7 @@ class BulkOperationControllerTest extends BaseTest {
             .andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
-    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    var utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
     if (Set.of(PROPOSED_CHANGES_MARC_FILE, COMMITTED_RECORDS_MARC_FILE).contains(fileContentType)
         && entityType == INSTANCE_MARC) {
       assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -244,7 +244,7 @@ class BulkOperationControllerTest extends BaseTest {
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
     var operationId = UUID.randomUUID();
-    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    var utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     var stream =
@@ -289,22 +289,21 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldHaveHrIdWhenGetBulkOperationCollection() throws Exception {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       IntStream.range(0, 5)
-          .forEach(
-              i ->
-                  bulkOperationRepository.save(
-                      BulkOperation.builder()
-                          .id(UUID.randomUUID())
-                          .userId(UUID.randomUUID())
-                          .operationType(UPDATE)
-                          .entityType(USER)
-                          .identifierType(BARCODE)
-                          .status(NEW)
-                          .dataExportJobId(UUID.randomUUID())
-                          .totalNumOfRecords(1)
-                          .processedNumOfRecords(0)
-                          .executionChunkSize(5)
-                          .startTime(LocalDateTime.now())
-                          .build()));
+          .forEach(i ->
+              bulkOperationRepository.save(
+                  BulkOperation.builder()
+                      .id(UUID.randomUUID())
+                      .userId(UUID.randomUUID())
+                      .operationType(UPDATE)
+                      .entityType(USER)
+                      .identifierType(BARCODE)
+                      .status(NEW)
+                      .dataExportJobId(UUID.randomUUID())
+                      .totalNumOfRecords(1)
+                      .processedNumOfRecords(0)
+                      .executionChunkSize(5)
+                      .startTime(LocalDateTime.now())
+                      .build()));
       mockMvc
           .perform(
               get("/bulk-operations?query=(entityType==\"USER\") "
@@ -312,16 +311,15 @@ class BulkOperationControllerTest extends BaseTest {
                   .headers(defaultHeaders())
                   .contentType(APPLICATION_JSON))
           .andExpect(status().isOk())
-          .andExpect(
-              result -> {
-                var bulkOperations =
-                    new JSONObject(result.getResponse().getContentAsString())
-                        .getJSONArray("bulkOperations");
-                for (int i = 0; i < bulkOperations.length(); i++) {
-                  var bulkOperation = bulkOperations.getJSONObject(i);
-                  assertThat(bulkOperation.getInt("hrId") > 0);
-                }
-              });
+          .andExpect(result -> {
+            var bulkOperations =
+                new JSONObject(result.getResponse().getContentAsString())
+                    .getJSONArray("bulkOperations");
+            for (int i = 0; i < bulkOperations.length(); i++) {
+              var bulkOperation = bulkOperations.getJSONObject(i);
+              assertThat(bulkOperation.getInt("hrId") > 0);
+            }
+          });
     }
   }
 
@@ -330,10 +328,9 @@ class BulkOperationControllerTest extends BaseTest {
     var userIds = new UUID[] {UUID.randomUUID(), UUID.randomUUID()};
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       IntStream.range(0, 2)
-          .forEach(
-              i ->
-                  bulkOperationRepository.save(
-                      BulkOperation.builder().id(UUID.randomUUID()).userId(userIds[i]).build()));
+          .forEach(i ->
+              bulkOperationRepository.save(
+                  BulkOperation.builder().id(UUID.randomUUID()).userId(userIds[i]).build()));
       when(userClient.getUserById(userIds[0].toString()))
           .thenReturn(
               new User()
@@ -365,12 +362,11 @@ class BulkOperationControllerTest extends BaseTest {
                   .headers(defaultHeaders())
                   .contentType(APPLICATION_JSON))
           .andExpect(status().isOk())
-          .andExpect(
-              result -> {
-                var listUsers = new JSONObject(result.getResponse().getContentAsString());
-                assertThat(listUsers.getInt("total_records") == 2);
-                assertThat(listUsers.getJSONArray("users").length() == 2);
-              });
+          .andExpect(result -> {
+            var listUsers = new JSONObject(result.getResponse().getContentAsString());
+            assertThat(listUsers.getInt("total_records") == 2);
+            assertThat(listUsers.getJSONArray("users").length() == 2);
+          });
     }
   }
 
@@ -393,38 +389,38 @@ class BulkOperationControllerTest extends BaseTest {
     var bulkoperationId = UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734");
     var content =
         """
-            {
-               "bulkOperationMarcRules" : [ {
-                 "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
-                 "tag" : "500",
-                 "ind1" : "#",
-                 "ind2" : "#",
-                 "subfield" : "h",
-                 "actions" : [ {
-                   "name" : "FIND",
-                   "data" : [ {
-                     "key" : "VALUE",
-                     "value" : "text"
-                   } ]
-                 } ],
-                 "parameters" : [ {
-                   "key" : "OVERRIDE_PROTECTED",
-                   "value" : "false"
-                 } ],
-                 "subfields" : [ {
-                   "subfield" : "",
-                   "actions" : [ {
-                     "name" : "ADD_TO_EXISTING",
-                     "data" : [ {
-                       "key" : "VALUE",
-                       "value" : "text"
-                     } ]
-                   } ]
+        {
+           "bulkOperationMarcRules" : [ {
+             "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
+             "tag" : "500",
+             "ind1" : "#",
+             "ind2" : "#",
+             "subfield" : "h",
+             "actions" : [ {
+               "name" : "FIND",
+               "data" : [ {
+                 "key" : "VALUE",
+                 "value" : "text"
+               } ]
+             } ],
+             "parameters" : [ {
+               "key" : "OVERRIDE_PROTECTED",
+               "value" : "false"
+             } ],
+             "subfields" : [ {
+               "subfield" : "",
+               "actions" : [ {
+                 "name" : "ADD_TO_EXISTING",
+                 "data" : [ {
+                   "key" : "VALUE",
+                   "value" : "text"
                  } ]
-               } ],
-               "totalRecords" : 1
-             }
-            """;
+               } ]
+             } ]
+           } ],
+           "totalRecords" : 1
+         }
+        """;
 
     var bulkOperation = BulkOperation.builder().id(bulkoperationId).build();
 

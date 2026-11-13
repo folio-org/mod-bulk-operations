@@ -132,30 +132,28 @@ class FqmContentFetcherTest {
 
     var expected =
         data.getContent().stream()
-            .map(
-                json -> {
-                  JsonNode instanceJsonb;
-                  try {
-                    instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                  var rec = objectMapper.createObjectNode();
-                  rec.set("entity", instanceJsonb);
-                  rec.put("tenantId", "test_tenant");
-                  return rec.toString();
-                })
+            .map(json -> {
+              JsonNode instanceJsonb;
+              try {
+                instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+              var rec = objectMapper.createObjectNode();
+              rec.set("entity", instanceJsonb);
+              rec.put("tenantId", "test_tenant");
+              return rec.toString();
+            })
             .toList();
 
     IntStream.range(0, (total + chunkSize - 1) / chunkSize)
-        .forEach(
-            chunk -> {
-              int offset = chunk * chunkSize;
-              int limit = Math.min(chunkSize, total - offset);
-              when(queryClient.getQuery(queryId, offset, limit))
-                  .thenReturn(getMockedQueryDetails(offset, limit));
-              when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
-            });
+        .forEach(chunk -> {
+          int offset = chunk * chunkSize;
+          int limit = Math.min(chunkSize, total - offset);
+          when(queryClient.getQuery(queryId, offset, limit))
+              .thenReturn(getMockedQueryDetails(offset, limit));
+          when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
+        });
     var bulkOperation =
         BulkOperation.builder()
             .id(operationId)
@@ -173,7 +171,6 @@ class FqmContentFetcherTest {
   void fetchShouldProcessMultipleIdentifiersChunksInParallel() throws IOException {
 
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     List<UUID> uuids =
         List.of(
             fromString("0006c66c-cfff-41dd-bd04-929791746c5b"),
@@ -181,28 +178,6 @@ class FqmContentFetcherTest {
             fromString("0008ef7f-0d27-4503-a4ec-6b31faf56a01"),
             fromString("0009fabd-a241-4b51-a72c-dd3be79b3832"),
             fromString("000a7ba2-fd14-4605-b737-fbff50e089c6"));
-
-    var expected =
-        getMockedContents(uuids).stream()
-            .map(
-                json -> {
-                  JsonNode instanceJsonb;
-                  ObjectNode rec = null;
-                  try {
-                    var node = json.get("instance.jsonb");
-                    if (Objects.nonNull(node)) {
-                      instanceJsonb = objectMapper.readTree(node.toString());
-                      rec = objectMapper.createObjectNode();
-                      rec.set("entity", instanceJsonb);
-                      rec.put("tenantId", "test_tenant");
-                    }
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                  return rec;
-                })
-            .filter(Objects::nonNull)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
 
@@ -235,6 +210,27 @@ class FqmContentFetcherTest {
     var bulkOperation =
         BulkOperation.builder().id(operationId).entityType(EntityType.INSTANCE).build();
 
+    var expected =
+        getMockedContents(uuids).stream()
+            .map(json -> {
+              JsonNode instanceJsonb;
+              ObjectNode rec = null;
+              try {
+                var node = json.get("instance.jsonb");
+                if (Objects.nonNull(node)) {
+                  instanceJsonb = objectMapper.readTree(node.toString());
+                  rec = objectMapper.createObjectNode();
+                  rec.set("entity", instanceJsonb);
+                  rec.put("tenantId", "test_tenant");
+                }
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+              return rec;
+            })
+            .filter(Objects::nonNull)
+            .toList();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       String actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       var expectedIds =
@@ -321,14 +317,13 @@ class FqmContentFetcherTest {
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     IntStream.range(0, ((total + chunkSize - 1) / chunkSize) - 1)
-        .forEach(
-            chunk -> {
-              int offset = chunk * chunkSize;
-              int limit = Math.min(chunkSize, total - offset);
-              when(queryClient.getQuery(queryId, offset, limit))
-                  .thenReturn(getMockedQueryDetails(offset, limit));
-              when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
-            });
+        .forEach(chunk -> {
+          int offset = chunk * chunkSize;
+          int limit = Math.min(chunkSize, total - offset);
+          when(queryClient.getQuery(queryId, offset, limit))
+              .thenReturn(getMockedQueryDetails(offset, limit));
+          when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
+        });
 
     int offset = ((total + chunkSize - 1) / chunkSize - 1) * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
@@ -360,22 +355,6 @@ class FqmContentFetcherTest {
     final int total = 2;
     final var operationId = randomUUID();
     var mockedQueryData = getMockedDataForEntityType(EntityType.USER, total);
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("users.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
@@ -388,6 +367,21 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("users.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).doesNotContain("\"entity\"");
@@ -408,23 +402,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.ITEM, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("items.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
@@ -437,6 +415,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
@@ -446,6 +425,20 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedTitle);
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("items.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
@@ -480,23 +473,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.HOLDINGS_RECORD, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("holdings.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total))
@@ -510,6 +487,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
@@ -519,6 +497,20 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedInstTitle);
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("holdings.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
@@ -534,23 +526,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.INSTANCE, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("instance.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total))
@@ -564,12 +540,27 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("instance.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
@@ -587,7 +578,6 @@ class FqmContentFetcherTest {
     final int total = 2;
     final var operationId = randomUUID();
     final var instanceId = "707b7988-2c99-44d9-898f-01d09fc9f25e";
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
@@ -609,6 +599,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -631,8 +622,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReturnAnErrorForShadowUsersInEcs() throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("tenant");
@@ -656,6 +645,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -680,8 +670,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReportShadowUsersWhenMemberTenant() throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
 
@@ -704,6 +692,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -717,8 +706,6 @@ class FqmContentFetcherTest {
 
   @Test
   void contentsShouldReportShadowUsersWhenSubmittedByIdentifier() throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.getCentralTenantId("member-tenant")).thenReturn("central-tenant");
@@ -737,6 +724,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -750,8 +738,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReturnRegularUsersAndReportShadowUsersWhenMemberTenant() throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
 
@@ -782,6 +768,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"username\":\"regular-user\"");
@@ -798,8 +785,6 @@ class FqmContentFetcherTest {
   @Test
   void contentsShouldReturnRegularUsersAndReportShadowUsersWhenSubmittedByIdentifier()
       throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.getCentralTenantId("member-tenant")).thenReturn("central-tenant");
@@ -825,6 +810,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.contents(bulkOperation, List.of(regularUserId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"username\":\"regular-user\"");
@@ -840,8 +826,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReturnAnErrorForDcbUsersInNonEcsAndEcs() throws Exception {
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
-
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("central");
 
@@ -864,6 +848,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -914,23 +899,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.INSTANCE_MARC, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("instance.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
@@ -943,12 +912,27 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("instance.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
@@ -961,7 +945,6 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 1;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("central-tenant");
     when(consortiaService.isTenantCentral("central-tenant")).thenReturn(true);
 
@@ -974,17 +957,16 @@ class FqmContentFetcherTest {
 
     var uuids =
         mockForInstanceWithoutTenant.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("instance.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("instance.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
             .map(UUID::fromString)
             .toList();
 
@@ -995,6 +977,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
@@ -1027,23 +1010,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 1;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.INSTANCE, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("instance.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
 
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
@@ -1057,10 +1024,25 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("instance.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       is.readAllBytes();
     }
@@ -1073,24 +1055,7 @@ class FqmContentFetcherTest {
     final var queryId = randomUUID();
     final int total = 1;
     final var operationId = randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     var mockedQueryData = getMockedDataForEntityType(EntityType.USER, total);
-    var uuids =
-        mockedQueryData.getContent().stream()
-            .map(
-                map -> {
-                  try {
-                    return objectMapper
-                        .readTree(map.get("users.jsonb").toString())
-                        .get("id")
-                        .asString();
-                  } catch (JacksonException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .map(UUID::fromString)
-            .toList();
-
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
@@ -1103,10 +1068,25 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
 
+    var uuids =
+        mockedQueryData.getContent().stream()
+            .map(map -> {
+              try {
+                return objectMapper
+                    .readTree(map.get("users.jsonb").toString())
+                    .get("id")
+                    .asString();
+              } catch (JacksonException e) {
+                throw new RuntimeException(e);
+              }
+            })
+            .map(UUID::fromString)
+            .toList();
     try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       is.readAllBytes();
     }
@@ -1119,7 +1099,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1141,6 +1120,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -1156,7 +1136,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1178,6 +1157,7 @@ class FqmContentFetcherTest {
             .processedNumOfRecords(0)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
@@ -1193,7 +1173,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1214,6 +1193,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
@@ -1227,7 +1207,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1248,6 +1227,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
@@ -1261,7 +1241,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1281,6 +1260,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
@@ -1294,7 +1274,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
@@ -1319,6 +1298,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
@@ -1332,7 +1312,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("non-member-tenant");
     when(consortiaService.isTenantCentral("non-member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("non-member-tenant")).thenReturn(false);
@@ -1353,6 +1332,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
@@ -1366,7 +1346,6 @@ class FqmContentFetcherTest {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
-    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("non-member-tenant");
     when(consortiaService.isTenantCentral("non-member-tenant")).thenReturn(false);
     when(consortiaService.isTenantMember("non-member-tenant")).thenReturn(false);
@@ -1387,6 +1366,7 @@ class FqmContentFetcherTest {
             .fqlQueryId(queryId)
             .build();
 
+    var contents = new ArrayList<BulkOperationExecutionContent>();
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();

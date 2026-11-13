@@ -61,10 +61,9 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
             .map(UUID::fromString)
             .map(bulkOperationRepository::findById)
             .flatMap(opt -> opt)
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Bulk operation was not found, aborting batch execution."));
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Bulk operation was not found, aborting batch execution."));
 
     bulkOperation.setProcessedNumOfRecords(processed);
     bulkOperation.setMatchedNumOfRecords(matched);
