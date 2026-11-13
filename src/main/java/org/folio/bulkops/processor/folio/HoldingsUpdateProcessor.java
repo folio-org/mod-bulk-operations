@@ -120,20 +120,18 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
                     Integer.MAX_VALUE)
                 .getItems()
                 .stream()
-                .filter(
-                    item ->
-                        !holdingsRecord.getDiscoverySuppress().equals(item.getDiscoverySuppress()))
+                .filter(item ->
+                    !holdingsRecord.getDiscoverySuppress().equals(item.getDiscoverySuppress()))
                 .toList()
             : Collections.emptyList();
     if (itemsForUpdate.isEmpty()) {
       return false;
     }
-    itemsForUpdate.forEach(
-        item -> {
-          var patchBody = createPatchBody(item);
-          addDiscoverySuppress(patchBody, holdingsRecord.getDiscoverySuppress());
-          itemClient.patchItem(patchBody, item.getId());
-        });
+    itemsForUpdate.forEach(item -> {
+      var patchBody = createPatchBody(item);
+      addDiscoverySuppress(patchBody, holdingsRecord.getDiscoverySuppress());
+      itemClient.patchItem(patchBody, item.getId());
+    });
     return true;
   }
 

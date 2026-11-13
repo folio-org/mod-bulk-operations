@@ -37,7 +37,7 @@ class SubjectReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     var id = "id";
     var expectedName = "name";
@@ -56,7 +56,7 @@ class SubjectReferenceServiceTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     var id = "id";
     when(subjectSourcesClient.getById(id)).thenThrow(new NotFoundException("Not found"));
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actualName = subjectReferenceService.getSubjectSourceNameById(id, null);
@@ -69,7 +69,7 @@ class SubjectReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     var id = "id";
     var expectedName = "name";
     when(subjectTypesClient.getById(id)).thenReturn(new SubjectType().withName(expectedName));
@@ -88,7 +88,7 @@ class SubjectReferenceServiceTest {
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(subjectTypesClient.getById(id)).thenThrow(new NotFoundException("Not found"));
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actualName = subjectReferenceService.getSubjectTypeNameById(id, null);

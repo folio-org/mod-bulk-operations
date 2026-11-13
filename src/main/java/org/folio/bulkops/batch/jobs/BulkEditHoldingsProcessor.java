@@ -100,11 +100,10 @@ public class BulkEditHoldingsProcessor
 
     var distinctHoldings =
         holdings.getExtendedHoldingsRecords().stream()
-            .filter(
-                holdingsRecord ->
-                    duplicationCheckerFactory
-                        .getFetchedIds(jobExecution)
-                        .add(holdingsRecord.getEntity().getId()))
+            .filter(holdingsRecord ->
+                duplicationCheckerFactory
+                    .getFetchedIds(jobExecution)
+                    .add(holdingsRecord.getEntity().getId()))
             .toList();
 
     var fetchedIds = duplicationCheckerFactory.getFetchedIds(jobExecution);
@@ -156,45 +155,41 @@ public class BulkEditHoldingsProcessor
             tenantResolver.getAffiliatedPermittedTenantIds(
                 HOLDINGS_RECORD, jobExecution, identifierType, tenantIds, itemIdentifier);
 
-        affiliatedPermittedTenants.forEach(
-            tenantId -> {
-              try (@SuppressWarnings("unused")
-                  var context =
-                      new FolioExecutionContextSetter(
-                          prepareContextForTenant(
-                              tenantId, folioModuleMetadata, folioExecutionContext))) {
-                var holdingsRecordCollection = getHoldingsRecordCollection(type, itemIdentifier);
+        affiliatedPermittedTenants.forEach(tenantId -> {
+          try (@SuppressWarnings("unused")
+              var context =
+                  new FolioExecutionContextSetter(
+                      prepareContextForTenant(
+                          tenantId, folioModuleMetadata, folioExecutionContext))) {
+            var holdingsRecordCollection = getHoldingsRecordCollection(type, itemIdentifier);
 
-                var toAdd =
-                    holdingsRecordCollection.getHoldingsRecords().stream()
-                        .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
-                        .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
-                        .map(
-                            holdingsRecord ->
-                                holdingsRecord.withInstanceTitle(
-                                    holdingsReferenceService.getInstanceTitleById(
-                                        holdingsRecord.getInstanceId(), tenantId)))
-                        .map(
-                            holdingsRecord -> {
-                              localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
-                              return holdingsRecord.withTenantId(tenantId);
-                            })
-                        .map(
-                            holdingsRecord ->
-                                new ExtendedHoldingsRecord()
-                                    .withTenantId(tenantId)
-                                    .withEntity(holdingsRecord))
-                        .toList();
+            var toAdd =
+                holdingsRecordCollection.getHoldingsRecords().stream()
+                    .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
+                    .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
+                    .map(holdingsRecord ->
+                        holdingsRecord.withInstanceTitle(
+                            holdingsReferenceService.getInstanceTitleById(
+                                holdingsRecord.getInstanceId(), tenantId)))
+                    .map(holdingsRecord -> {
+                      localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
+                      return holdingsRecord.withTenantId(tenantId);
+                    })
+                    .map(holdingsRecord ->
+                        new ExtendedHoldingsRecord()
+                            .withTenantId(tenantId)
+                            .withEntity(holdingsRecord))
+                    .toList();
 
-                extendedHoldingsRecordCollection.getExtendedHoldingsRecords().addAll(toAdd);
-                extendedHoldingsRecordCollection.setTotalRecords(
-                    extendedHoldingsRecordCollection.getTotalRecords()
-                        + holdingsRecordCollection.getTotalRecords());
-              } catch (Exception e) {
-                log.error(e.getMessage());
-                throw e;
-              }
-            });
+            extendedHoldingsRecordCollection.getExtendedHoldingsRecords().addAll(toAdd);
+            extendedHoldingsRecordCollection.setTotalRecords(
+                extendedHoldingsRecordCollection.getTotalRecords()
+                    + holdingsRecordCollection.getTotalRecords());
+          } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+          }
+        });
         return extendedHoldingsRecordCollection;
       } else {
         throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
@@ -208,16 +203,14 @@ public class BulkEditHoldingsProcessor
           holdingsRecordCollection.getHoldingsRecords().stream()
               .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
               .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
-              .map(
-                  holdingsRecord ->
-                      holdingsRecord.withInstanceTitle(
-                          holdingsReferenceService.getInstanceTitleById(
-                              holdingsRecord.getInstanceId(), folioExecutionContext.getTenantId())))
-              .map(
-                  holdingsRecord ->
-                      new ExtendedHoldingsRecord()
-                          .withTenantId(folioExecutionContext.getTenantId())
-                          .withEntity(holdingsRecord))
+              .map(holdingsRecord ->
+                  holdingsRecord.withInstanceTitle(
+                      holdingsReferenceService.getInstanceTitleById(
+                          holdingsRecord.getInstanceId(), folioExecutionContext.getTenantId())))
+              .map(holdingsRecord ->
+                  new ExtendedHoldingsRecord()
+                      .withTenantId(folioExecutionContext.getTenantId())
+                      .withEntity(holdingsRecord))
               .toList();
 
       var extendedHoldingsRecordCollection =

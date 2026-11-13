@@ -78,11 +78,10 @@ public class DataImportProfilesBuilder {
       addedRelations.stream()
           .skip(1)
           .findFirst()
-          .ifPresent(
-              r -> {
-                r.setMasterProfileId(matchProfile.getId());
-                r.setDetailProfileId(actionProfileToUpdateSrs.getId());
-              });
+          .ifPresent(r -> {
+            r.setMasterProfileId(matchProfile.getId());
+            r.setDetailProfileId(actionProfileToUpdateSrs.getId());
+          });
       return jobProfilePost;
     }
   }

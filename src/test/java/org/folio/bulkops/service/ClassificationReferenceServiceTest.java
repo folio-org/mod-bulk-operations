@@ -33,7 +33,7 @@ class ClassificationReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     var classificationTypeId = UUID.randomUUID().toString();
     when(classificationTypesClient.getById(classificationTypeId))
         .thenReturn(ClassificationType.builder().id(classificationTypeId).name("LC").build());

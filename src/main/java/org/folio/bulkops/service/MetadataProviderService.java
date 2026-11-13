@@ -77,11 +77,10 @@ public class MetadataProviderService {
     var progress = new DataImportProgress().current(0).total(0);
     jobExecutions.stream()
         .map(DataImportJobExecution::getProgress)
-        .forEach(
-            dataImportProgress -> {
-              progress.setCurrent(progress.getCurrent() + dataImportProgress.getCurrent());
-              progress.setTotal(progress.getTotal() + dataImportProgress.getTotal());
-            });
+        .forEach(dataImportProgress -> {
+          progress.setCurrent(progress.getCurrent() + dataImportProgress.getCurrent());
+          progress.setTotal(progress.getTotal() + dataImportProgress.getTotal());
+        });
     return progress;
   }
 
@@ -133,13 +132,12 @@ public class MetadataProviderService {
       }
       var offsets = splitOffsets(expectedJobLogEntriesNumber);
       return fjPool
-          .submit(
-              () ->
-                  offsets.stream()
-                      .parallel()
-                      .map(offset -> getEntries(bulkOperation, jobExecutionId, offset, chunkSize))
-                      .flatMap(List::stream)
-                      .toList())
+          .submit(() ->
+              offsets.stream()
+                  .parallel()
+                  .map(offset -> getEntries(bulkOperation, jobExecutionId, offset, chunkSize))
+                  .flatMap(List::stream)
+                  .toList())
           .get();
     } catch (ExecutionException | InterruptedException e) {
       log.error("Failed to retrieve job log entries", e);

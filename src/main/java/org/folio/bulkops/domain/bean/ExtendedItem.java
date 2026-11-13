@@ -48,19 +48,18 @@ public class ExtendedItem implements BulkOperationsEntity {
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
     entity
         .getNotes()
-        .forEach(
-            note -> {
-              var tenantNotePair =
-                  tenantNotePairs.stream()
-                      .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-                      .findFirst();
-              if (tenantNotePair.isPresent()) {
-                note.setTenantId(tenantNotePair.get().getTenantId());
-                note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
-              } else {
-                note.setTenantId(tenantId);
-              }
-            });
+        .forEach(note -> {
+          var tenantNotePair =
+              tenantNotePairs.stream()
+                  .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+                  .findFirst();
+          if (tenantNotePair.isPresent()) {
+            note.setTenantId(tenantNotePair.get().getTenantId());
+            note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
+          } else {
+            note.setTenantId(tenantId);
+          }
+        });
   }
 
   @Override

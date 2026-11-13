@@ -100,12 +100,11 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     }
 
     var updaterOpt = instanceNotesUpdaterFactory.getUpdater(option, action, forPreview);
-    return updaterOpt.orElseGet(
-        () ->
-            instance -> {
-              throw new BulkOperationException(
-                  format("Combination %s and %s isn't supported yet", option, action.getType()));
-            });
+    return updaterOpt.orElseGet(() ->
+        instance -> {
+          throw new BulkOperationException(
+              format("Combination %s and %s isn't supported yet", option, action.getType()));
+        });
   }
 
   @Override

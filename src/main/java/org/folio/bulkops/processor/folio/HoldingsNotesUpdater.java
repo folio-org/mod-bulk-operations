@@ -41,101 +41,88 @@ public class HoldingsNotesUpdater {
     if ((MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType())
         && option == HOLDINGS_NOTE) {
       var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
-      return Optional.of(
-          extendedHoldingsRecord ->
-              setMarkAsStaffForNotesByTypeId(
-                  extendedHoldingsRecord.getEntity().getNotes(),
-                  action.getParameters(),
-                  markAsStaffValue));
+      return Optional.of(extendedHoldingsRecord ->
+          setMarkAsStaffForNotesByTypeId(
+              extendedHoldingsRecord.getEntity().getNotes(),
+              action.getParameters(),
+              markAsStaffValue));
     } else if (REMOVE_ALL == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setAdministrativeNotes(
-                        administrativeNotesUpdater.removeAdministrativeNotes()));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setAdministrativeNotes(administrativeNotesUpdater.removeAdministrativeNotes()));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setNotes(
-                        removeNotesByTypeId(
-                            extendedHoldingsRecord.getEntity().getNotes(),
-                            action.getParameters())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setNotes(
+                    removeNotesByTypeId(
+                        extendedHoldingsRecord.getEntity().getNotes(), action.getParameters())));
       }
     } else if (ADD_TO_EXISTING == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setAdministrativeNotes(
-                        administrativeNotesUpdater.addToAdministrativeNotes(
-                            action.getUpdated(),
-                            extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setAdministrativeNotes(
+                    administrativeNotesUpdater.addToAdministrativeNotes(
+                        action.getUpdated(),
+                        extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setNotes(
-                        addToNotesByTypeId(
-                            extendedHoldingsRecord.getEntity().getNotes(),
-                            action.getParameters(),
-                            action.getUpdated())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setNotes(
+                    addToNotesByTypeId(
+                        extendedHoldingsRecord.getEntity().getNotes(),
+                        action.getParameters(),
+                        action.getUpdated())));
       }
     } else if (FIND_AND_REMOVE_THESE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setAdministrativeNotes(
-                        administrativeNotesUpdater.findAndRemoveAdministrativeNote(
-                            action.getInitial(),
-                            extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setAdministrativeNotes(
+                    administrativeNotesUpdater.findAndRemoveAdministrativeNote(
+                        action.getInitial(),
+                        extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setNotes(
-                        findAndRemoveNoteByValueAndTypeId(
-                            action.getInitial(),
-                            extendedHoldingsRecord.getEntity().getNotes(),
-                            action.getParameters())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setNotes(
+                    findAndRemoveNoteByValueAndTypeId(
+                        action.getInitial(),
+                        extendedHoldingsRecord.getEntity().getNotes(),
+                        action.getParameters())));
       }
     } else if (FIND_AND_REPLACE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                extendedHoldingsRecord
-                    .getEntity()
-                    .setAdministrativeNotes(
-                        administrativeNotesUpdater.findAndReplaceAdministrativeNote(
-                            action, extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord ->
+            extendedHoldingsRecord
+                .getEntity()
+                .setAdministrativeNotes(
+                    administrativeNotesUpdater.findAndReplaceAdministrativeNote(
+                        action, extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord -> {
-              if (extendedHoldingsRecord.getEntity().getNotes() != null) {
-                var notes = new ArrayList<>(extendedHoldingsRecord.getEntity().getNotes());
-                findAndReplaceNoteByValueAndTypeId(action, notes);
-                extendedHoldingsRecord.getEntity().setNotes(notes);
-              }
-            });
+        return Optional.of(extendedHoldingsRecord -> {
+          if (extendedHoldingsRecord.getEntity().getNotes() != null) {
+            var notes = new ArrayList<>(extendedHoldingsRecord.getEntity().getNotes());
+            findAndReplaceNoteByValueAndTypeId(action, notes);
+            extendedHoldingsRecord.getEntity().setNotes(notes);
+          }
+        });
       }
     } else if (CHANGE_TYPE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                administrativeNotesUpdater.changeNoteTypeForAdministrativeNotes(
-                    extendedHoldingsRecord.getEntity(), action));
+        return Optional.of(extendedHoldingsRecord ->
+            administrativeNotesUpdater.changeNoteTypeForAdministrativeNotes(
+                extendedHoldingsRecord.getEntity(), action));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(
-            extendedHoldingsRecord ->
-                changeNoteTypeForHoldingsNote(extendedHoldingsRecord.getEntity(), action));
+        return Optional.of(extendedHoldingsRecord ->
+            changeNoteTypeForHoldingsNote(extendedHoldingsRecord.getEntity(), action));
       }
     }
     return Optional.empty();
@@ -158,18 +145,16 @@ public class HoldingsNotesUpdater {
     parameters.stream()
         .filter(p -> StringUtils.equals(p.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY))
         .findFirst()
-        .ifPresent(
-            parameter -> {
-              var typeId = parameter.getValue();
-              if (notes != null) {
-                notes.forEach(
-                    note -> {
-                      if (StringUtils.equals(typeId, note.getHoldingsNoteTypeId())) {
-                        note.setStaffOnly(markAsStaffValue);
-                      }
-                    });
+        .ifPresent(parameter -> {
+          var typeId = parameter.getValue();
+          if (notes != null) {
+            notes.forEach(note -> {
+              if (StringUtils.equals(typeId, note.getHoldingsNoteTypeId())) {
+                note.setStaffOnly(markAsStaffValue);
               }
             });
+          }
+        });
   }
 
   private List<HoldingsNote> removeNotesByTypeId(
@@ -213,19 +198,17 @@ public class HoldingsNotesUpdater {
       notes = new ArrayList<>(notes);
       var notesToRemove = new ArrayList<HoldingsNote>();
       notes.stream()
-          .filter(
-              note ->
-                  StringUtils.equals(
-                      note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue()))
-          .forEach(
-              note -> {
-                String updatedNote = note.getNote().replace(valueToRemove, StringUtils.EMPTY);
-                if (updatedNote.isBlank()) {
-                  notesToRemove.add(note);
-                } else {
-                  note.setNote(updatedNote);
-                }
-              });
+          .filter(note ->
+              StringUtils.equals(
+                  note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue()))
+          .forEach(note -> {
+            String updatedNote = note.getNote().replace(valueToRemove, StringUtils.EMPTY);
+            if (updatedNote.isBlank()) {
+              notesToRemove.add(note);
+            } else {
+              note.setNote(updatedNote);
+            }
+          });
       notes.removeAll(notesToRemove);
     }
     return notes;
@@ -235,20 +218,18 @@ public class HoldingsNotesUpdater {
     var typeIdParameterOptional = getTypeIdParameterOptional(action.getParameters());
     if (typeIdParameterOptional.isPresent() && notes != null) {
       var notesToRemove = new ArrayList<HoldingsNote>();
-      notes.forEach(
-          note -> {
-            if (StringUtils.equals(
-                    note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
-                && contains(note.getNote(), action.getInitial())) {
-              String replacedNote =
-                  replace(note.getNote(), action.getInitial(), action.getUpdated());
-              if (replacedNote.isBlank()) {
-                notesToRemove.add(note);
-              } else {
-                note.setNote(replacedNote);
-              }
-            }
-          });
+      notes.forEach(note -> {
+        if (StringUtils.equals(
+                note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
+            && contains(note.getNote(), action.getInitial())) {
+          String replacedNote = replace(note.getNote(), action.getInitial(), action.getUpdated());
+          if (replacedNote.isBlank()) {
+            notesToRemove.add(note);
+          } else {
+            note.setNote(replacedNote);
+          }
+        }
+      });
       notes.removeAll(notesToRemove);
     }
   }

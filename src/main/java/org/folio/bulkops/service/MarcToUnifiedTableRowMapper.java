@@ -80,68 +80,66 @@ public class MarcToUnifiedTableRowMapper {
 
   private void processControlFields(
       List<String> rowData, List<ControlField> controlFields, List<String> headers) {
-    controlFields.forEach(
-        controlField -> {
-          if ("001".equals(controlField.getTag())) {
-            var hridIndex = headers.indexOf(INSTANCE_HRID);
-            if (hridIndex != -1) {
-              rowData.set(hridIndex, controlField.getData());
-            }
-          } else if ("008".equals(controlField.getTag())) {
-            var index = headers.indexOf(INSTANCE_LANGUAGES);
-            if (index != -1) {
-              rowData.set(index, controlField.getData().substring(35, 38));
-            }
-          }
-        });
+    controlFields.forEach(controlField -> {
+      if ("001".equals(controlField.getTag())) {
+        var hridIndex = headers.indexOf(INSTANCE_HRID);
+        if (hridIndex != -1) {
+          rowData.set(hridIndex, controlField.getData());
+        }
+      } else if ("008".equals(controlField.getTag())) {
+        var index = headers.indexOf(INSTANCE_LANGUAGES);
+        if (index != -1) {
+          rowData.set(index, controlField.getData().substring(35, 38));
+        }
+      }
+    });
   }
 
   private void processDataFields(
       List<String> rowData, List<DataField> dataFields, List<String> headers, boolean forCsv) {
-    dataFields.forEach(
-        dataField -> {
-          var tag = dataField.getTag();
-          switch (tag) {
-            case "041" -> processLanguages(rowData, dataField, headers);
-            case "050", "060", "080", "082", "086", "090" ->
-                processClassification(rowData, dataField, headers, forCsv);
-            case "100", "110", "111", "700", "710", "711", "720" ->
-                processContributors(rowData, dataField, headers);
-            case "245" -> processTitles(rowData, dataField, headers);
-            case "250" -> processEdition(rowData, dataField, headers);
-            case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
-            case "300" -> processPhysicalDescription(rowData, dataField, headers);
-            case "310", "321" -> processPublicationFrequency(rowData, dataField, headers);
-            case "336" -> processResourceType(rowData, dataField, headers);
-            case "338" -> processInstanceFormats(rowData, dataField, headers);
-            case "362" -> processPublicationRange(rowData, dataField, headers);
-            case "600",
-                "610",
-                "611",
-                "630",
-                "647",
-                "648",
-                "650",
-                "651",
-                "653",
-                "654",
-                "655",
-                "656",
-                "657",
-                "658",
-                "662",
-                "688" ->
-                processSubject(rowData, dataField, headers, forCsv);
-            case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
-            case "856" -> processElectronicAccess(rowData, dataField, headers, forCsv);
-            case "999" -> processInstanceId(rowData, dataField, headers);
-            default -> {
-              if (referenceProvider.isMappedNoteTag(tag)) {
-                processInstanceNotes(rowData, dataField, headers, forCsv);
-              }
-            }
+    dataFields.forEach(dataField -> {
+      var tag = dataField.getTag();
+      switch (tag) {
+        case "041" -> processLanguages(rowData, dataField, headers);
+        case "050", "060", "080", "082", "086", "090" ->
+            processClassification(rowData, dataField, headers, forCsv);
+        case "100", "110", "111", "700", "710", "711", "720" ->
+            processContributors(rowData, dataField, headers);
+        case "245" -> processTitles(rowData, dataField, headers);
+        case "250" -> processEdition(rowData, dataField, headers);
+        case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
+        case "300" -> processPhysicalDescription(rowData, dataField, headers);
+        case "310", "321" -> processPublicationFrequency(rowData, dataField, headers);
+        case "336" -> processResourceType(rowData, dataField, headers);
+        case "338" -> processInstanceFormats(rowData, dataField, headers);
+        case "362" -> processPublicationRange(rowData, dataField, headers);
+        case "600",
+            "610",
+            "611",
+            "630",
+            "647",
+            "648",
+            "650",
+            "651",
+            "653",
+            "654",
+            "655",
+            "656",
+            "657",
+            "658",
+            "662",
+            "688" ->
+            processSubject(rowData, dataField, headers, forCsv);
+        case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
+        case "856" -> processElectronicAccess(rowData, dataField, headers, forCsv);
+        case "999" -> processInstanceId(rowData, dataField, headers);
+        default -> {
+          if (referenceProvider.isMappedNoteTag(tag)) {
+            processInstanceNotes(rowData, dataField, headers, forCsv);
           }
-        });
+        }
+      }
+    });
   }
 
   private void processClassification(
@@ -156,9 +154,8 @@ public class MarcToUnifiedTableRowMapper {
         var newClassificationString =
             newClassifications.stream()
                 .map(classification -> isEmpty(classification.trim()) ? HYPHEN : classification)
-                .map(
-                    classification ->
-                        String.join(arrayDelimiter, classificationType, classification))
+                .map(classification ->
+                    String.join(arrayDelimiter, classificationType, classification))
                 .collect(Collectors.joining(itemDelimiter));
         var classificationString = rowData.get(index);
         if (StringUtils.isEmpty(classificationString)) {
@@ -419,9 +416,9 @@ public class MarcToUnifiedTableRowMapper {
       List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var tag = dataField.getTag();
     var index =
-        !headers.contains(referenceProvider.getNoteTypeByTag(tag))
-            ? headers.indexOf(GENERAL_NOTE)
-            : headers.indexOf(referenceProvider.getNoteTypeByTag(tag));
+      headers.contains(referenceProvider.getNoteTypeByTag(tag))
+        ? headers.indexOf(referenceProvider.getNoteTypeByTag(tag))
+        : headers.indexOf(GENERAL_NOTE);
     if (index != -1) {
       var prefix = forCsv ? headers.get(index) + ARRAY_DELIMITER : EMPTY;
       var notes = prefix + helper.fetchNotes(dataField, forCsv);

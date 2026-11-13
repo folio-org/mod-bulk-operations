@@ -51,13 +51,12 @@ public class KafkaService {
 
     log.info("Creating topics for kafka [topics: {}]", newTopics);
     var configurableBeanFactory = (ConfigurableBeanFactory) beanFactory;
-    newTopics.forEach(
-        newTopic -> {
-          var beanName = newTopic.name() + ".topic";
-          if (!configurableBeanFactory.containsBean(beanName)) {
-            configurableBeanFactory.registerSingleton(beanName, newTopic);
-          }
-        });
+    newTopics.forEach(newTopic -> {
+      var beanName = newTopic.name() + ".topic";
+      if (!configurableBeanFactory.containsBean(beanName)) {
+        configurableBeanFactory.registerSingleton(beanName, newTopic);
+      }
+    });
     kafkaAdmin.initialize();
   }
 

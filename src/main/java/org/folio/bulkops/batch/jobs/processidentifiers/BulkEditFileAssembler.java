@@ -93,42 +93,38 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
       Collection<StepExecution> executions,
       ExecutorService exec,
       List<String> filesToDelete) {
-    exec.execute(
-        () -> {
-          var csvFileParts =
-              executions.stream()
-                  .map(
-                      e ->
-                          e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_CSV_PATH))
-                  .toList();
-          filesToDelete.addAll(csvFileParts);
+    exec.execute(() -> {
+      var csvFileParts =
+          executions.stream()
+              .map(e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_CSV_PATH))
+              .toList();
+      filesToDelete.addAll(csvFileParts);
 
-          var tmpLocalFilePath =
-              stepExecution
-                  .getJobExecution()
-                  .getJobParameters()
-                  .getString(JobParameterNames.TEMP_LOCAL_FILE_PATH);
-          ofNullable(tmpLocalFilePath)
-              .ifPresent(
-                  path -> {
-                    try (var writer = new BufferedWriter(new FileWriter(path))) {
-                      for (int i = 0; i < csvFileParts.size(); i++) {
-                        var reader = new BufferedReader(new FileReader(csvFileParts.get(i)));
-                        String line = reader.readLine();
-                        if (i == 0 && nonNull(line)) {
-                          writer.write(UTF8_BOM + line + LINE_BREAK);
-                        }
-                        while ((line = reader.readLine()) != null) {
-                          writer.write(line + LINE_BREAK);
-                        }
-                        reader.close();
-                      }
-                    } catch (Exception e) {
-                      log.error("Error occurred while merging CSV part files", e);
-                      throw new FileOperationException(e);
-                    }
-                  });
-        });
+      var tmpLocalFilePath =
+          stepExecution
+              .getJobExecution()
+              .getJobParameters()
+              .getString(JobParameterNames.TEMP_LOCAL_FILE_PATH);
+      ofNullable(tmpLocalFilePath)
+          .ifPresent(path -> {
+            try (var writer = new BufferedWriter(new FileWriter(path))) {
+              for (int i = 0; i < csvFileParts.size(); i++) {
+                var reader = new BufferedReader(new FileReader(csvFileParts.get(i)));
+                String line = reader.readLine();
+                if (i == 0 && nonNull(line)) {
+                  writer.write(UTF8_BOM + line + LINE_BREAK);
+                }
+                while ((line = reader.readLine()) != null) {
+                  writer.write(line + LINE_BREAK);
+                }
+                reader.close();
+              }
+            } catch (Exception e) {
+              log.error("Error occurred while merging CSV part files", e);
+              throw new FileOperationException(e);
+            }
+          });
+    });
   }
 
   private void mergeMarc(
@@ -137,19 +133,16 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
       ExecutorService exec,
       List<String> filesToDelete) {
     if (isInstanceJob(stepExecution)) {
-      exec.execute(
-          () -> {
-            var marcFileParts =
-                executions.stream()
-                    .map(
-                        e ->
-                            e.getExecutionContext()
-                                .getString(JobParameterNames.TEMP_OUTPUT_MARC_PATH))
-                    .toList();
-            mergePartFiles(
-                stepExecution, JobParameterNames.TEMP_LOCAL_MARC_PATH, ".mrc", marcFileParts);
-            filesToDelete.addAll(marcFileParts);
-          });
+      exec.execute(() -> {
+        var marcFileParts =
+            executions.stream()
+                .map(
+                    e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_MARC_PATH))
+                .toList();
+        mergePartFiles(
+            stepExecution, JobParameterNames.TEMP_LOCAL_MARC_PATH, ".mrc", marcFileParts);
+        filesToDelete.addAll(marcFileParts);
+      });
     }
   }
 
@@ -158,19 +151,14 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
       Collection<StepExecution> executions,
       ExecutorService exec,
       List<String> filesToDelete) {
-    exec.execute(
-        () -> {
-          var jsonFileParts =
-              executions.stream()
-                  .map(
-                      e ->
-                          e.getExecutionContext()
-                              .getString(JobParameterNames.TEMP_OUTPUT_JSON_PATH))
-                  .toList();
-          mergePartFiles(
-              stepExecution, JobParameterNames.TEMP_LOCAL_FILE_PATH, ".json", jsonFileParts);
-          filesToDelete.addAll(jsonFileParts);
-        });
+    exec.execute(() -> {
+      var jsonFileParts =
+          executions.stream()
+              .map(e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_JSON_PATH))
+              .toList();
+      mergePartFiles(stepExecution, JobParameterNames.TEMP_LOCAL_FILE_PATH, ".json", jsonFileParts);
+      filesToDelete.addAll(jsonFileParts);
+    });
   }
 
   private void mergePartFiles(
@@ -202,20 +190,18 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
 
   private void removePartFiles(List<String> partFiles) {
     try (var exec = Executors.newCachedThreadPool()) {
-      exec.execute(
-          () -> {
-            partFiles.forEach(
-                file -> {
-                  try {
-                    Files.delete(Path.of(file));
-                  } catch (IOException e) {
-                    log.error("Error occurred while deleting the part files", e);
-                    throw new FileOperationException(e);
-                  }
-                });
-            var deletedCount = partFiles.size();
-            log.info("All {} part files have been deleted successfully.", deletedCount);
-          });
+      exec.execute(() -> {
+        partFiles.forEach(file -> {
+          try {
+            Files.delete(Path.of(file));
+          } catch (IOException e) {
+            log.error("Error occurred while deleting the part files", e);
+            throw new FileOperationException(e);
+          }
+        });
+        var deletedCount = partFiles.size();
+        log.info("All {} part files have been deleted successfully.", deletedCount);
+      });
     }
   }
 

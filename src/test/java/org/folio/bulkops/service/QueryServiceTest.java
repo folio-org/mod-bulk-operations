@@ -109,18 +109,10 @@ class QueryServiceTest {
   @Test
   void processAsyncQueryResult_shouldWriteTriggeringIdsAndSetUsedTenants_whenApproachQuery()
       throws Exception {
-    var bulkOperationId = randomUUID();
-    var operation =
-        BulkOperation.builder()
-            .id(bulkOperationId)
-            .entityType(EntityType.ITEM)
-            .approach(QUERY)
-            .build();
-
-    String triggeringCsv = "trigger.csv";
-    String matchedCsv = "matched.csv";
-    String matchedJson = "matched.json";
-    String matchedMrc = "matched.mrc";
+    var triggeringCsv = "trigger.csv";
+    var matchedCsv = "matched.csv";
+    var matchedJson = "matched.json";
+    var matchedMrc = "matched.mrc";
 
     var triggeringWriter = spy(new StringWriter());
     var resultCsvWriter = spy(new StringWriter());
@@ -165,6 +157,12 @@ class QueryServiceTest {
             srsService);
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
+    var operation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
     try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
       csvHelper
           .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
@@ -193,18 +191,10 @@ class QueryServiceTest {
 
   @Test
   void processAsyncQueryResult_shouldUpdateCountersEvery100Records_andAtEnd() throws Exception {
-    var bulkOperationId = randomUUID();
-    var operation =
-        BulkOperation.builder()
-            .id(bulkOperationId)
-            .entityType(EntityType.ITEM)
-            .approach(QUERY)
-            .build();
-
-    String triggeringCsv = "trigger.csv";
-    String matchedCsv = "matched.csv";
-    String matchedJson = "matched.json";
-    String matchedMrc = "matched.mrc";
+    var triggeringCsv = "trigger.csv";
+    var matchedCsv = "matched.csv";
+    var matchedJson = "matched.json";
+    var matchedMrc = "matched.mrc";
 
     when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(new StringWriter());
     when(remoteFileSystemClient.writer(matchedCsv)).thenReturn(new StringWriter());
@@ -218,16 +208,15 @@ class QueryServiceTest {
     hasNextSeq[101] = Boolean.FALSE;
     when(iterator.hasNext())
         .thenReturn(hasNextSeq[0], Arrays.copyOfRange(hasNextSeq, 1, hasNextSeq.length));
-    List<BulkOperationsEntity> records =
+    var records =
         IntStream.rangeClosed(1, 101)
-            .mapToObj(
-                i -> {
-                  var r = mock(BulkOperationsEntity.class);
-                  when(r.getTenant()).thenReturn("t" + i);
-                  when(r.getRecordBulkOperationEntity()).thenReturn(r);
-                  when(r.getId()).thenReturn("id-" + i);
-                  return r;
-                })
+            .mapToObj(i -> {
+              var r = mock(BulkOperationsEntity.class);
+              when(r.getTenant()).thenReturn("t" + i);
+              when(r.getRecordBulkOperationEntity()).thenReturn(r);
+              when(r.getId()).thenReturn("id-" + i);
+              return r;
+            })
             .toList();
     when(iterator.next())
         .thenReturn(
@@ -252,6 +241,12 @@ class QueryServiceTest {
             srsService);
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
+    var operation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
     try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
       csvHelper
           .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
@@ -342,17 +337,11 @@ class QueryServiceTest {
   void processAsyncQueryResult_shouldCollectErrors_whenUploadFromQueryExceptionOccurs()
       throws Exception {
     var bulkOperationId = randomUUID();
-    var operation =
-        BulkOperation.builder()
-            .id(bulkOperationId)
-            .entityType(EntityType.ITEM)
-            .approach(QUERY)
-            .build();
 
-    String triggeringCsv = "trigger.csv";
-    String matchedCsv = "matched.csv";
-    String matchedJson = "matched.json";
-    String matchedMrc = "matched.mrc";
+    var triggeringCsv = "trigger.csv";
+    var matchedCsv = "matched.csv";
+    var matchedJson = "matched.json";
+    var matchedMrc = "matched.mrc";
 
     var triggeringWriter = spy(new StringWriter());
     when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(triggeringWriter);
@@ -391,6 +380,12 @@ class QueryServiceTest {
             srsService);
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
+    var operation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
     try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
       csvHelper
           .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
@@ -735,8 +730,7 @@ class QueryServiceTest {
         BulkOperation.builder()
             .id(bulkOperationId)
             .approach(approachType)
-            .linkToTriggeringCsvFile(
-                approachType != QUERY ? bulkOperationId + "/some-link.csv" : null)
+            .linkToTriggeringCsvFile(approachType == QUERY ? null : bulkOperationId + "/some-link.csv")
             .build();
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
@@ -901,10 +895,8 @@ class QueryServiceTest {
     try (MockedStatic<FolioExecutionScopeExecutionContextManager> ctx =
         mockStatic(FolioExecutionScopeExecutionContextManager.class)) {
 
-      ctx.when(
-              () ->
-                  FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext(
-                      any()))
+      ctx.when(() ->
+              FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext(any()))
           .thenAnswer(inv -> inv.getArgument(0));
 
       try {
@@ -919,10 +911,8 @@ class QueryServiceTest {
     try (MockedStatic<FolioExecutionScopeExecutionContextManager> ctx =
         mockStatic(FolioExecutionScopeExecutionContextManager.class)) {
 
-      ctx.when(
-              () ->
-                  FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext(
-                      any()))
+      ctx.when(() ->
+              FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext(any()))
           .thenAnswer(inv -> inv.getArgument(0));
 
       try {

@@ -57,30 +57,29 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var initialRecord = marcRecord.toString();
     bulkOperationMarcRuleCollection
         .getBulkOperationMarcRules()
-        .forEach(
-            bulkOperationMarcRule -> {
-              try {
-                marcRulesValidator.validate(bulkOperationMarcRule);
-                applyRuleToRecord(bulkOperationMarcRule, marcRecord);
-              } catch (RuleValidationException e) {
-                log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-                errorService.saveError(
-                    operation.getId(),
-                    getIdentifier(operation, marcRecord),
-                    e.getMessage(),
-                    ErrorType.ERROR);
-              } catch (Exception e) {
-                log.error(
-                    String.format(
-                        "MARC record HRID=%s error: %s",
-                        marcRecord.getControlNumber(), e.getMessage()));
-                errorService.saveError(
-                    operation.getId(),
-                    getIdentifier(operation, marcRecord),
-                    e.getMessage(),
-                    ErrorType.ERROR);
-              }
-            });
+        .forEach(bulkOperationMarcRule -> {
+          try {
+            marcRulesValidator.validate(bulkOperationMarcRule);
+            applyRuleToRecord(bulkOperationMarcRule, marcRecord);
+          } catch (RuleValidationException e) {
+            log.warn(String.format("Rule validation exception: %s", e.getMessage()));
+            errorService.saveError(
+                operation.getId(),
+                getIdentifier(operation, marcRecord),
+                e.getMessage(),
+                ErrorType.ERROR);
+          } catch (Exception e) {
+            log.error(
+                String.format(
+                    "MARC record HRID=%s error: %s",
+                    marcRecord.getControlNumber(), e.getMessage()));
+            errorService.saveError(
+                operation.getId(),
+                getIdentifier(operation, marcRecord),
+                e.getMessage(),
+                ErrorType.ERROR);
+          }
+        });
     var updatedRecord = marcRecord.toString();
     if (!StringUtils.equals(initialRecord, updatedRecord)) {
       MarcDateHelper.updateDateTimeControlField(marcRecord, currentDate);
@@ -142,14 +141,12 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var appendSubfieldCode =
         fetchActionDataValue(SUBFIELD, rule.getActions().get(1).getData()).charAt(0);
     findFields(rule, marcRecord).stream()
-        .filter(
-            df ->
-                df.getSubfields(subfieldCode).stream()
-                    .anyMatch(sf -> contains(sf.getData(), findValue)))
-        .forEach(
-            df -> {
-              df.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
-            });
+        .filter(df ->
+            df.getSubfields(subfieldCode).stream()
+                .anyMatch(sf -> contains(sf.getData(), findValue)))
+        .forEach(df -> {
+          df.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
+        });
   }
 
   private void processFindAndReplace(BulkOperationMarcRule rule, Record marcRecord)
@@ -159,27 +156,25 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var newValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
     var fieldsToRemove = new java.util.ArrayList<DataField>();
     findFields(rule, marcRecord)
-        .forEach(
-            dataField -> {
-              var subfieldsToRemove = new java.util.ArrayList<Subfield>();
-              dataField
-                  .getSubfields(subfieldCode)
-                  .forEach(
-                      subfield -> {
-                        if (contains(subfield.getData(), findValue)) {
-                          var replacedValue = replace(subfield.getData(), findValue, newValue);
-                          if (StringUtils.isEmpty(replacedValue)) {
-                            subfieldsToRemove.add(subfield);
-                          } else {
-                            subfield.setData(replacedValue);
-                          }
-                        }
-                      });
-              subfieldsToRemove.forEach(dataField::removeSubfield);
-              if (dataField.getSubfields().isEmpty()) {
-                fieldsToRemove.add(dataField);
-              }
-            });
+        .forEach(dataField -> {
+          var subfieldsToRemove = new java.util.ArrayList<Subfield>();
+          dataField
+              .getSubfields(subfieldCode)
+              .forEach(subfield -> {
+                if (contains(subfield.getData(), findValue)) {
+                  var replacedValue = replace(subfield.getData(), findValue, newValue);
+                  if (StringUtils.isEmpty(replacedValue)) {
+                    subfieldsToRemove.add(subfield);
+                  } else {
+                    subfield.setData(replacedValue);
+                  }
+                }
+              });
+          subfieldsToRemove.forEach(dataField::removeSubfield);
+          if (dataField.getSubfields().isEmpty()) {
+            fieldsToRemove.add(dataField);
+          }
+        });
     fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
@@ -188,10 +183,9 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
     findFields(rule, marcRecord).stream()
-        .filter(
-            df ->
-                df.getSubfields(subfieldCode).stream()
-                    .anyMatch(sf -> contains(sf.getData(), findValue)))
+        .filter(df ->
+            df.getSubfields(subfieldCode).stream()
+                .anyMatch(sf -> contains(sf.getData(), findValue)))
         .forEach(marcRecord::removeVariableField);
   }
 
@@ -201,15 +195,14 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var findValue = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
     var fieldsToRemove = new java.util.ArrayList<DataField>();
     findFields(rule, marcRecord)
-        .forEach(
-            df -> {
-              df.getSubfields(subfieldCode).stream()
-                  .filter(sf -> contains(sf.getData(), findValue))
-                  .forEach(df::removeSubfield);
-              if (df.getSubfields().isEmpty()) {
-                fieldsToRemove.add(df);
-              }
-            });
+        .forEach(df -> {
+          df.getSubfields(subfieldCode).stream()
+              .filter(sf -> contains(sf.getData(), findValue))
+              .forEach(df::removeSubfield);
+          if (df.getSubfields().isEmpty()) {
+            fieldsToRemove.add(df);
+          }
+        });
     fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
@@ -217,11 +210,10 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char ind1 = fetchIndicatorValue(rule.getInd1());
     char ind2 = fetchIndicatorValue(rule.getInd2());
     return marcRecord.getDataFields().stream()
-        .filter(
-            dataField ->
-                rule.getTag().equals(dataField.getTag())
-                    && ind1 == dataField.getIndicator1()
-                    && ind2 == dataField.getIndicator2())
+        .filter(dataField ->
+            rule.getTag().equals(dataField.getTag())
+                && ind1 == dataField.getIndicator1()
+                && ind2 == dataField.getIndicator2())
         .toList();
   }
 
@@ -232,13 +224,12 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     marcRecord
         .getDataFields()
-        .removeIf(
-            dataField ->
-                dataField.getTag().equals(tag)
-                    && dataField.getIndicator1() == ind1
-                    && dataField.getIndicator2() == ind2
-                    && dataField.getSubfields().stream()
-                        .anyMatch(subfield -> subfield.getCode() == subfieldCode));
+        .removeIf(dataField ->
+            dataField.getTag().equals(tag)
+                && dataField.getIndicator1() == ind1
+                && dataField.getIndicator2() == ind2
+                && dataField.getSubfields().stream()
+                    .anyMatch(subfield -> subfield.getCode() == subfieldCode));
   }
 
   private void processRemoveField(BulkOperationMarcRule rule, Record marcRecord) {
@@ -246,24 +237,22 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char ind2 = fetchIndicatorValue(rule.getInd2());
     marcRecord
         .getDataFields()
-        .removeIf(
-            dataField ->
-                rule.getTag().equals(dataField.getTag())
-                    && ind1 == dataField.getIndicator1()
-                    && ind2 == dataField.getIndicator2());
+        .removeIf(dataField ->
+            rule.getTag().equals(dataField.getTag())
+                && ind1 == dataField.getIndicator1()
+                && ind2 == dataField.getIndicator2());
   }
 
   private void processRemoveSubfield(BulkOperationMarcRule rule, Record marcRecord) {
     char subfieldCode = rule.getSubfield().charAt(0);
     var fieldsToRemove = new java.util.ArrayList<DataField>();
     findFields(rule, marcRecord)
-        .forEach(
-            df -> {
-              df.getSubfields(subfieldCode).forEach(df::removeSubfield);
-              if (df.getSubfields().isEmpty()) {
-                fieldsToRemove.add(df);
-              }
-            });
+        .forEach(df -> {
+          df.getSubfields(subfieldCode).forEach(df::removeSubfield);
+          if (df.getSubfields().isEmpty()) {
+            fieldsToRemove.add(df);
+          }
+        });
     fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
