@@ -259,16 +259,15 @@ public class FqmContentFetcher {
         // Save duplicates across tenants errors for IDs that are present in more than one tenant
         idTenantMap
             .entrySet()
-            .removeIf(
-                e -> {
-                  if (e.getValue().size() > 1) {
-                    saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-                    bulkOperation.setProcessedNumOfRecords(
-                      bulkOperation.getProcessedNumOfRecords() + 1);
-                    return true;
-                  }
-                  return false;
-                });
+            .removeIf(e -> {
+              if (e.getValue().size() > 1) {
+                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                bulkOperation.setProcessedNumOfRecords(
+                    bulkOperation.getProcessedNumOfRecords() + 1);
+                return true;
+              }
+              return false;
+            });
 
         return id ->
             idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
