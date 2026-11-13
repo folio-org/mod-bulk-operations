@@ -224,7 +224,7 @@ class BulkOperationControllerTest extends BaseTest {
             .andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
-    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    var utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
     if (Set.of(PROPOSED_CHANGES_MARC_FILE, COMMITTED_RECORDS_MARC_FILE).contains(fileContentType)
         && entityType == INSTANCE_MARC) {
       assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -244,7 +244,7 @@ class BulkOperationControllerTest extends BaseTest {
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
     var operationId = UUID.randomUUID();
-    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    var utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     var stream =
