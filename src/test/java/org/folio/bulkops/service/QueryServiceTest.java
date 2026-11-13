@@ -275,10 +275,10 @@ class QueryServiceTest {
             .approach(QUERY)
             .build();
 
-    String triggeringCsv = "trigger.csv";
-    String matchedCsv = "matched.csv";
-    String matchedJson = "matched.json";
-    String matchedMrc = "matched.mrc";
+    var triggeringCsv = "trigger.csv";
+    var matchedCsv = "matched.csv";
+    var matchedJson = "matched.json";
+    var matchedMrc = "matched.mrc";
 
     var triggeringWriter = spy(new StringWriter());
     when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(triggeringWriter);
@@ -730,7 +730,8 @@ class QueryServiceTest {
         BulkOperation.builder()
             .id(bulkOperationId)
             .approach(approachType)
-            .linkToTriggeringCsvFile(approachType == QUERY ? null : bulkOperationId + "/some-link.csv")
+            .linkToTriggeringCsvFile(
+                approachType == QUERY ? null : bulkOperationId + "/some-link.csv")
             .build();
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());

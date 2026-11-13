@@ -416,9 +416,9 @@ public class MarcToUnifiedTableRowMapper {
       List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var tag = dataField.getTag();
     var index =
-      headers.contains(referenceProvider.getNoteTypeByTag(tag))
-        ? headers.indexOf(referenceProvider.getNoteTypeByTag(tag))
-        : headers.indexOf(GENERAL_NOTE);
+        headers.contains(referenceProvider.getNoteTypeByTag(tag))
+            ? headers.indexOf(referenceProvider.getNoteTypeByTag(tag))
+            : headers.indexOf(GENERAL_NOTE);
     if (index != -1) {
       var prefix = forCsv ? headers.get(index) + ARRAY_DELIMITER : EMPTY;
       var notes = prefix + helper.fetchNotes(dataField, forCsv);

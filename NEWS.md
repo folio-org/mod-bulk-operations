@@ -1,3 +1,7 @@
+## v2.3.5 - Released 2026/11/13
+
+Trillium CSP#1 - Upgrade to SpringBoot 4.1
+
 ## v2.3.4 - Released 2025/06/04
 
 This release contains fix for bulk operation status change
