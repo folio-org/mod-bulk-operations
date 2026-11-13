@@ -202,9 +202,9 @@ public class NoteTableUpdater {
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
     var numOfNoteFields =
-        !forInstances
-            ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS
-            : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
+        forInstances
+            ? NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES
+            : NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS;
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);

@@ -656,8 +656,7 @@ class QueryServiceTest {
         BulkOperation.builder()
             .id(bulkOperationId)
             .approach(approachType)
-            .linkToTriggeringCsvFile(
-                approachType != QUERY ? bulkOperationId + "/some-link.csv" : null)
+            .linkToTriggeringCsvFile(approachType == QUERY ? null : bulkOperationId + "/some-link.csv")
             .build();
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
