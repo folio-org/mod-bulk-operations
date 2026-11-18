@@ -53,7 +53,7 @@ class ItemNoteProcessorTest {
     when(itemReferenceService.getAllItemNoteTypes("member")).thenReturn(List.of(noteType2));
 
     when(consortiaService.isTenantCentral(any())).thenReturn(true);
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(cacheManager.getCache("itemNoteTypes")).thenReturn(cache);
 
     itemNoteProcessor.setFolioExecutionContext(folioExecutionContext);

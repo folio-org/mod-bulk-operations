@@ -107,7 +107,7 @@ class ConsortiaServiceTest {
     when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
     when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE))
         .thenReturn(userTenantCollection);
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     var actual = consortiaService.getUserTenantsPerId("currentTenantId", "userId");
 

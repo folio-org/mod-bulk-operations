@@ -54,7 +54,7 @@ class HoldingsNotesProcessorTest {
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member")).thenReturn(List.of(noteType2));
 
     when(consortiaService.isTenantCentral(any())).thenReturn(true);
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
 
     holdingsNotesProcessor.setFolioExecutionContext(folioExecutionContext);

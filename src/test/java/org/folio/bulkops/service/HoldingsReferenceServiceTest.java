@@ -60,7 +60,7 @@ class HoldingsReferenceServiceTest {
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
+    when(folioExecutionContext.getAllHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
   }
 
   @Test
