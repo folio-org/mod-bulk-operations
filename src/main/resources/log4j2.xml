@@ -12,6 +12,9 @@
     <Logger name="org.folio.rs.client" level = "DEBUG" additivity = "false">
       <AppenderRef ref="Console" />
     </Logger>
+    <Logger name="org.folio.spring.kafka.filtering" level="DEBUG" additivity = "false">
+      <AppenderRef ref="Console" />
+    </Logger>
     <Logger name="org.springframework.cache" level="OFF" additivity = "false">
       <AppenderRef ref="Console" />
     </Logger>
