@@ -1,5 +1,8 @@
 server:
   port: 8081
+logging:
+  level:
+    org.folio.spring.kafka.filtering: DEBUG
 spring:
   application:
     name: @project.artifactId@
