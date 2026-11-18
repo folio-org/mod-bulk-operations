@@ -82,7 +82,7 @@ class BulkEditItemProcessorTest {
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("centralTenant");
     when(folioExecutionContext.getTenantId()).thenReturn("centralTenant");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
+    when(folioExecutionContext.getAllHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
   }
 
   @Test

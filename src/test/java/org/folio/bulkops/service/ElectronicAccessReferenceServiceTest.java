@@ -34,7 +34,7 @@ class ElectronicAccessReferenceServiceTest {
     var id = "id";
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("diku");
     var expectedName = "name";
     when(electronicAccessRelationshipClient.getById(id))
@@ -53,7 +53,7 @@ class ElectronicAccessReferenceServiceTest {
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(electronicAccessRelationshipClient.getById(id))
         .thenThrow(new NotFoundException("Not found"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("tenant");
 
     assertThrows(
