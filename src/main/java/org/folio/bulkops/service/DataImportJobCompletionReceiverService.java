@@ -28,6 +28,7 @@ public class DataImportJobCompletionReceiverService {
       filter = "tenantAwareMessageFilter")
   public void receiveJobExecutionUpdate(
       DataImportJobExecution dataImportJobExecution, @Headers Map<String, Object> messageHeaders) {
+    log.info("receiveJobExecutionUpdate:: receive DI completed event {}", dataImportJobExecution.getId());
     var defaultFolioExecutionContext =
         DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
