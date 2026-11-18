@@ -3,7 +3,7 @@ server:
 spring:
   application:
     name: @project.artifactId@
-    version: @project.version@
+    version: ${MODULE_VERSION:@project.version@}
   servlet:
     multipart:
       max-file-size: ${MAX_UPLOADED_FILE_SIZE:40MB}
@@ -54,6 +54,13 @@ folio:
   environment: ${ENV:folio}
   exchange:
     enabled: true
+  kafka:
+    tenant-filter:
+      enabled: ${KAFKA_TENANT_FILTER_ENABLED:false}
+      ignore-empty-batch: true
+      tenant-disabled-strategy: ${KAFKA_TENANT_FILTER_TENANT_DISABLED_STRATEGY:skip}
+      all-tenants-disabled-strategy: ${KAFKA_TENANT_FILTER_ALL_TENANTS_DISABLED_STRATEGY:fail}
+      entitlement-refresh-interval-seconds: ${KAFKA_TENANT_FILTER_ENTITLEMENT_REFRESH_INTERVAL_SECONDS:900}
   tenant:
     validation:
       enabled: true
@@ -87,7 +94,7 @@ application:
     sub-path: ${S3_SUB_PATH:mod-bulk-operations}
   kafka:
     topic-pattern-di: ${ENV:folio}.(.*\.)?DI_JOB_COMPLETED
-    group-id: ${ENV:folio}-mod-bulk-operations-events-group
+    group-id: ${ENV:folio}-mod-bulk-operations-events-group-${spring.application.version}
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:5000}
   platform: ${PLATFORM:okapi}

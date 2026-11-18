@@ -68,6 +68,12 @@
 
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>folio-spring-kafka</artifactId>
+      <version>${folio-spring-base.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>folio-spring-system-user</artifactId>
       <version>${folio-spring-base.version}</version>
     </dependency>
@@ -341,6 +347,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
