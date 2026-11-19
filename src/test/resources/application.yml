@@ -39,6 +39,8 @@ folio:
       tenant-disabled-strategy: ${KAFKA_TENANT_FILTER_TENANT_DISABLED_STRATEGY:skip}
       all-tenants-disabled-strategy: ${KAFKA_TENANT_FILTER_ALL_TENANTS_DISABLED_STRATEGY:fail}
       entitlement-refresh-interval-seconds: ${KAFKA_TENANT_FILTER_ENTITLEMENT_REFRESH_INTERVAL_SECONDS:900}
+okapi:
+  url: ${OKAPI_URL:http://okapi:9130}
 management:
   endpoints:
     enabled-by-default: false
