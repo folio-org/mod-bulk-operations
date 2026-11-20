@@ -65,7 +65,7 @@ folio:
     validation:
       enabled: true
 okapi:
-  url: ${OKAPI_URL:http://okapi:9130}
+  url: ${folio.okapi-url}
 management:
   endpoints:
     web:

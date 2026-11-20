@@ -3,7 +3,7 @@ server:
 spring:
   application:
     name: mod-spring-template
-    version: ${MODULE_VERSION:@project.version@}
+    version: ${MODULE_VERSION:1.0.0-test}
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -40,7 +40,7 @@ folio:
       all-tenants-disabled-strategy: ${KAFKA_TENANT_FILTER_ALL_TENANTS_DISABLED_STRATEGY:fail}
       entitlement-refresh-interval-seconds: ${KAFKA_TENANT_FILTER_ENTITLEMENT_REFRESH_INTERVAL_SECONDS:900}
 okapi:
-  url: ${OKAPI_URL:http://okapi:9130}
+  url: ${folio.okapi-url}
 management:
   endpoints:
     enabled-by-default: false
