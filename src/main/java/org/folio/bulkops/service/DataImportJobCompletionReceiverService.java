@@ -24,7 +24,8 @@ public class DataImportJobCompletionReceiverService {
   @KafkaListener(
       containerFactory = "kafkaListenerContainerFactoryDi",
       topicPattern = "${application.kafka.topic-pattern-di}",
-      groupId = "${application.kafka.group-id}")
+      groupId = "${application.kafka.group-id}",
+      filter = "tenantAwareMessageFilter")
   public void receiveJobExecutionUpdate(
       DataImportJobExecution dataImportJobExecution, @Headers Map<String, Object> messageHeaders) {
     var defaultFolioExecutionContext =

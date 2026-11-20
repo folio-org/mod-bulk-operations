@@ -42,27 +42,32 @@ This value should be `true` if AWS S3 is used. To ensure the correct operation o
 configured. This requires setting the values of environment variables: OKAPI_URL, SYSTEM_USER_NAME, SYSTEM_USER_PASSWORD,
 SYSTEM_USER_ENABLED (by default is `true`).
 
-| Name                        | Default value                   | Description                                                                                                         |
-|:----------------------------|:--------------------------------|:--------------------------------------------------------------------------------------------------------------------|
-| KAFKA_HOST                  | localhost                       | Kafka broker hostname                                                                                               |
-| KAFKA_PORT                  | 9092                            | Kafka broker port                                                                                                   |
-| ENV                         | folio                           | Environment name                                                                                                    |
-| S3_URL                      | http://127.0.0.1:9000/          | S3 url                                                                                                              |
-| S3_REGION                   | -                               | S3 region                                                                                                           |
-| S3_BUCKET                   | -                               | S3 bucket                                                                                                           |
-| S3_ACCESS_KEY_ID            | -                               | S3 access key                                                                                                       |
-| S3_SECRET_ACCESS_KEY        | -                               | S3 secret key                                                                                                       |
-| S3_IS_AWS                   | false                           | Specify if AWS S3 is used as files storage                                                                          |
-| S3_SUB_PATH                 | mod-bulk-operations             | S3 subpath for file storage                                                                          |
-| MAX_UPLOADED_FILE_SIZE      | 40MB                            | Specifies multipart upload file size                                                                                |
-| PLATFORM                    | okapi                           | Specifies if okapi or eureka platform                                                                               |
-| OKAPI_URL                   | http://okapi:9130               | Okapi url                                                                                                           |
-| SYSTEM\_USER\_NAME          | mod-bulk-operations-system-user | Username of the system user                                                                                         |
-| SYSTEM\_USER\_PASSWORD      | -                               | Password of the system user                                                                                         |
-| SYSTEM\_USER\_ENABLED       | true                            | Defines if system user must be created at service tenant initialization or used for egress service requests         |
-| FQM\_MAX\_CHUNK\_SIZE       | 10000                           | Max chunk size of FQM Fetcher                                                                                       |
-| FQM\_MAX\_PARALLEL\_CHUNKS  | 5                               | Max number of parallel chunks processed at the same time                                                            |
-| FQM\_QUERY\_APPROACH        | false                           | Approach to use with query: false if identifiers flow, otherwise FQM flow for both Query and Identifiers approaches |
+| Name                                                     | Default value                   | Description                                                                                                                                         |
+|:---------------------------------------------------------|:--------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------|
+| KAFKA_HOST                                               | localhost                       | Kafka broker hostname                                                                                                                               |
+| KAFKA_PORT                                               | 9092                            | Kafka broker port                                                                                                                                   |
+| KAFKA_TENANT_FILTER_ENABLED                              | false                           | Enables tenant-aware Kafka message filtering for mixed-version deployments                                                                          |
+| KAFKA_TENANT_FILTER_TENANT_DISABLED_STRATEGY             | skip                            | Strategy applied when a message's tenant is not entitled to this module version. Supported values are `ACCEPT`, `SKIP`, and `FAIL`                  |
+| KAFKA_TENANT_FILTER_ALL_TENANTS_DISABLED_STRATEGY        | fail                            | Strategy applied when no tenants are entitled to this module version. Supported values are `FAIL` and `SKIP`                                        |
+| KAFKA_TENANT_FILTER_ENTITLEMENT_REFRESH_INTERVAL_SECONDS | 900                             | Interval in seconds for refreshing the tenant-entitlement cache                                                                                     |
+| MODULE_VERSION                                           | project version from pom.xml    | **Required.** Exact module version including CI build number. Must be identical to the `MODULE_VERSION` supplied to this module's sidecar container |
+| ENV                                                      | folio                           | Environment name                                                                                                                                    |
+| S3_URL                                                   | http://127.0.0.1:9000/          | S3 url                                                                                                                                              |
+| S3_REGION                                                | -                               | S3 region                                                                                                                                           |
+| S3_BUCKET                                                | -                               | S3 bucket                                                                                                                                           |
+| S3_ACCESS_KEY_ID                                         | -                               | S3 access key                                                                                                                                       |
+| S3_SECRET_ACCESS_KEY                                     | -                               | S3 secret key                                                                                                                                       |
+| S3_IS_AWS                                                | false                           | Specify if AWS S3 is used as files storage                                                                                                          |
+| S3_SUB_PATH                                              | mod-bulk-operations             | S3 subpath for file storage                                                                                                                         |
+| MAX_UPLOADED_FILE_SIZE                                   | 40MB                            | Specifies multipart upload file size                                                                                                                |
+| PLATFORM                                                 | okapi                           | Specifies if okapi or eureka platform                                                                                                               |
+| OKAPI_URL                                                | http://okapi:9130               | Okapi url                                                                                                                                           |
+| SYSTEM\_USER\_NAME                                       | mod-bulk-operations-system-user | Username of the system user                                                                                                                         |
+| SYSTEM\_USER\_PASSWORD                                   | -                               | Password of the system user                                                                                                                         |
+| SYSTEM\_USER\_ENABLED                                    | true                            | Defines if system user must be created at service tenant initialization or used for egress service requests                                         |
+| FQM\_MAX\_CHUNK\_SIZE                                    | 10000                           | Max chunk size of FQM Fetcher                                                                                                                       |
+| FQM\_MAX\_PARALLEL\_CHUNKS                               | 5                               | Max number of parallel chunks processed at the same time                                                                                            |
+| FQM\_QUERY\_APPROACH                                     | false                           | Approach to use with query: false if identifiers flow, otherwise FQM flow for both Query and Identifiers approaches                                 |
 
 ### Memory configuration
 To stable module operating the following mod-data-export-worker configuration is required: Java args -XX:MetaspaceSize=384m -XX:MaxMetaspaceSize=512m -Xmx2048m,

@@ -3,6 +3,7 @@ server:
 spring:
   application:
     name: mod-spring-template
+    version: ${MODULE_VERSION:1.0.0-test}
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -31,6 +32,15 @@ folio:
   tenant:
     validation:
       enabled: false
+  kafka:
+    tenant-filter:
+      enabled: ${KAFKA_TENANT_FILTER_ENABLED:false}
+      ignore-empty-batch: true
+      tenant-disabled-strategy: ${KAFKA_TENANT_FILTER_TENANT_DISABLED_STRATEGY:skip}
+      all-tenants-disabled-strategy: ${KAFKA_TENANT_FILTER_ALL_TENANTS_DISABLED_STRATEGY:fail}
+      entitlement-refresh-interval-seconds: ${KAFKA_TENANT_FILTER_ENTITLEMENT_REFRESH_INTERVAL_SECONDS:900}
+okapi:
+  url: ${folio.okapi-url}
 management:
   endpoints:
     enabled-by-default: false
@@ -49,7 +59,7 @@ application:
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
     topic-pattern-di: ${ENV:folio}.(.*\.)?DI_JOB_COMPLETED
-    group-id: ${ENV:folio}-mod-bulk-operations-events-group
+    group-id: ${ENV:folio}-mod-bulk-operations-events-group-${spring.application.version}
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:50}
   platform: ${PLATFORM:okapi}
